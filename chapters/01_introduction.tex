@@ -6,7 +6,13 @@
   % TODO: Introduction
   % - Introduce Goblint
   "[Goblint is ]a static analyzer for multi-threaded C programs, specializing in finding concurrency bugs." (Copypaste from https://goblint.in.tum.de/)
-	% - Explain Partial Contexts
-	% - Task: Decrease precision loss of partial contexts
+	% - TODO: Explain PARTIAL Contexts
+  % TODO: cite
+  Analyzing interprocedural programs poses a certain difficulty. A function can be called in many different places in a program, where the (possible) valus of not only formal arguments but also the global variables can be very different. Even a call in the same line of code can happen in very different contexts of such parameters and globals. Therefore one would like to analyze the function multiple times, each time with a different starting state of formal arguments and global variables or 'contexts'. However due to the high or potentially infinite amount of different calling contexts, this can be very costly. \\
+An approach to reduce this cost is to only analyze the function in question for some few joint contexts, where multiple possible starting states are joined into a single context representing all of them. This however comes with the price of precision, especially when tracking values or relations between variables: The joint context needs to represent multiple different states. This means that the resulting context needs to represent everything that the states describe about each variable, leading to a less precise state. For example (assuming an interval analysis), if it is known in some context that x = 5 and in another that x = 3 before the call, then the starting state of the context needs to map x to the Interval [3, 5]. \\
+Now even if a variable is not changed during the call and therefore also its state in the bigger state has not changed, the precision loss is still propagated to the state after the call. This is because when combining caller and callee state, it is not known wheter this particular variable was updated or not. For unreachable variables by the callee the caller state can be kept, however this does not apply to globals and variables reachable by the callee. In the above example, assuming x is a global or reachable variable, the state of x after the call will be the interval [3, 5], when x has not been altered in the call.\\
+  % - Task: Decrease precision loss of partial contexts
+To reduce this loss of precision, it would be helpfull to know which variables have been altered by the call. Then, when combining the states, only the states of variables which have been altered need to be updated with the state returned after the call, while the states of other variables can be kept from the caller state before the call.\\
+To gain the information of which variables have been altered, we will present a new analyisis keeping thrack of this in chapter \ref{chapter:mainContributions}.
   % REMOVE:
   Citation test~\parencite{latex}.
