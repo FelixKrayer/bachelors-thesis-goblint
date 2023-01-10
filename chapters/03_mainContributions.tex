@@ -5,7 +5,7 @@
 
   \section{Taint analysis}
     
-    \subsection{Fromal description}
+    \subsection{Formal description}
 
     $\mathbb{D} = 2^{\{\textsf{lval}\}}$\\
     $[u] \in \mathbb{D}$\\
@@ -30,7 +30,7 @@
     \item for all other Lvalues present in both contexts, the Rvalues mapped to by Lvalues not in the tainted set can be kept. We are sure that these variables are unchanged, even if they have a less precise record in the callee's context. For Lvalues present in the tainted set, it is necessary to take the Rvalue from the callee context, as the old Rvalue mapped to by the caller is incorrect.
   \end{itemize}
 
-  formal:\\
+  Formal:\\
 
   \begin{align}
     \textsf{combine}^{\#} \eta_\textsf{cr}\ \eta_\textsf{ce} = & \text{let } \eta'_\textsf{cr} = \eta_\textsf{cr} \backslash \textsf{lv}_\textsf{ce} \text{ in} \\
