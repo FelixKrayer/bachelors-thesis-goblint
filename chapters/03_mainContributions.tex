@@ -6,21 +6,37 @@
   \section{Taint analysis}
     
     \subsection{Fromal description}
-    % TODO: Formal description of Taint analysis
 
+    $\mathbb{D} = 2^{\{\textsf{lval}\}}$\\
+    $[u] \in \mathbb{D}$\\
+    Edge $e = (u, A, u')$ introduces the constraint $[u'] \sqsupseteq [\![  A ]\!] ^{\#}  (\textsf{get } [u]) $\\
     
+    \[ [\![ x = y ]\!] ^{\#}\ \textsf{lv} =  \textsf{lv} \cup \{x\} \]
+    \[ [\![ ^*x = y ]\!] ^{\#}\ \textsf{lv} =  \textsf{lv} \cup \textsf{MayPointTo}(x) \]
+    
+    \[ \textsf{enter}^{\#}\ \textsf{lv} = \emptyset\]
+    \[ \textsf{combine}^{\#}\ \textsf{lv}_\textsf{cr}\ \textsf{lv}_\textsf{ce} = \textsf{lv}_\textsf{cr} \cup \textsf{lv}_\textsf{ce} \]
+
 
     \subsection{Implementation}
     % TODO: How did the implementation of Taint analysis go?
 
   \section{Benefiting other Analyses}
-  In this section we will use the new <TODO Name> analysis to improve a context insensitive analysis. For this let's choose an analysis that maps Lvalues to Rvalues.
+  In this section we will use the new taint analysis to improve a context insensitive analysis. For this let's choose an analysis that maps Lvalues to Rvalues.
   When combining the contexts of the caller before the call with the one returned by the callee there a few aspects to keep in mind:
   \begin{itemize}
     \item All mappings of Lvalues, which are not tracked in the caller (i.e. map to top), but have a concrete value within the callee need to be added to the combined context. This is for Lvalues which are newly initialized inside the caller.
     \item (All mappings which are not in the callee context but have been in the caller context need to be removed. This can happen in multithreaded programs, if in the caller a mutex was held, that then was unlocked by the callee, deleting the information protected by the mutex)
     \item for all other Lvalues present in both contexts, the Rvalues mapped to by Lvalues not in the tainted set can be kept. We are sure that these variables are unchanged, even if they have a less precise record in the callee's context. For Lvalues present in the tainted set, it is necessary to take the Rvalue from the callee context, as the old Rvalue mapped to by the caller is incorrect.
   \end{itemize}
+
+  formal:\\
+
+  \begin{align}
+    \textsf{combine}^{\#} \eta_\textsf{cr}\ \eta_\textsf{ce} = & \text{let } \eta'_\textsf{cr} = \eta_\textsf{cr} \backslash \textsf{lv}_\textsf{ce} \text{ in} \\
+    & \text{let } \eta'_\textsf{ce} = \eta_\textsf{ce} \cap \textsf{lv}_\textsf{ce} \text{ in} \\
+    & \eta'_\textsf{cr} \cup \eta'_\textsf{ce}
+  \end{align}
   % TODO: How did other Analyses benefit?
 
 
