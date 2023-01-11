@@ -5,7 +5,16 @@
 
   \section{Related Work}
   % TODO: Related Work
+  \section{Static Analysis}
+  Static analysis is defined by Rival \cite{rival2020introduction} as "[...]an automatic technique that approximates in a conservative manner semantic properties of programs before their execution". This means that the program is analyzed just by the given source code without execution. The goal is to prove certain properties about the program in a "sound" manner i.e. any property that is proven to hold actually does hold. However, from failing to prove a property one cannot conclude that the given property does not hold.\\
+  A useful tool within static analysis is a values-of-variables analysis that maps a set of unknowns $X$ to abstractions of their possible values at any given point within the program. This allows for example to find guards (e.g. \textsf{if}-statements) which for any program execution will definitely hold or not hold, identifying dead code.\\ %% BAD: cut/change last sentence??
+  In the scope of this thesis we will focus on abstracting integer values by sets of integers. Thereby our Domain of abstract values will be $\mathbb{D} = 2^\mathbb{N}$
+
+  (* TODO *)
   \section{Constraint systems}
+  To find a mapping of unknowns to abstractions of possible values the following approach is used: First a control flow graph ("CFG") is created, where program points are connected by edges of actions $(u, A, v)$. This example denotes an action $A$ (e.g. an assignment of $A = (x = 7;)$) where $u$ us the point immediately before this action and $v$ the one immediately after. Using this CFG, a system of constraints for each program point is created. We can then compute a fix point of the system of constraints to get a solution there of (since everything is monotonic).
+  %% TODO: Example of CFG
+    % TODO Constraint systems
 
   
 
