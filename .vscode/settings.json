@@ -1,7 +1,8 @@
 {
   "cSpell.words": [
     "Goblint",
-    "interprocedural"
+    "interprocedural",
+    "overapproximation"
   ],
   "todo-tree.regex.regex": "(//|%|#|<!--|;|/\\*|^|^[ \\t]*(-|\\d+.))\\s*($TAGS)",
   "todo-tree.general.enableFileWatcher": false
