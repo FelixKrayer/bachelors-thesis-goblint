@@ -3,40 +3,28 @@
 
 \chapter{Main Contributions}\label{chapter:mainContributions}
 
-  \section{Taint analysis}
-    
-    \subsection{Formal description}
+  \section{Formal description}
+    \subsection{Taint analysis}
+      In this section we will propose our approach to reduce the aforementioned precision loss \ref{chapter:background}. The basic idea is to track for each procedure which variables have been written or have possibly been altered in some other way. This information is then used in the values-of-variables analysis when combining the abstract state from the caller with the abstract return state given by the callee at the end of the procedure.\\
+      In the following we will call a variable that has been written or altered in the current function context "tainted". Therefore, we introduce a new taint analysis tracking which variables have been tainted within the context of the current function.\\
+      First we formalize our taint analysis in the syntax for flow sensitive analyses we have built in the previous chapter \ref{chapter:background}:\\
+      $\mathbb{D}_\textsf{t} = 2^X$ with $\sqsupseteq = \supseteq$\\
+      $\eta_\textsf{t}: N \rightarrow \mathbb{D}_\textsf{t}$\\
+      Each edge $e = (u, A, v)$ introduces the constraint $\eta_\textsf{t}\ [v] \sqsupseteq [\![  A ]\!] ^{\#}  (\eta_\textsf{t}\ [u]) $\\
+      \[ [\![ x = y ]\!] ^{\#}\ T =  T \cup \{x\} \]
+      \[ [\![ ^*x = y ]\!] ^{\#}\ T =  T \cup \textsf{MayPointTo}(x) \]
+      
+      \[ \textsf{enter}^{\#}\ T = \emptyset\]
+      \[ \textsf{combine}^{\#}\ T_\textsf{cr}\ T_\textsf{ce} = T_\textsf{cr} \cup T_\textsf{ce} \]
 
-    $\mathbb{D} = 2^{\{\textsf{lval}\}}$\\
-    $[u] \in \mathbb{D}$\\
-    Edge $e = (u, A, u')$ introduces the constraint $[u'] \sqsupseteq [\![  A ]\!] ^{\#}  (\textsf{get } [u]) $\\
-    
-    \[ [\![ x = y ]\!] ^{\#}\ \textsf{lv} =  \textsf{lv} \cup \{x\} \]
-    \[ [\![ ^*x = y ]\!] ^{\#}\ \textsf{lv} =  \textsf{lv} \cup \textsf{MayPointTo}(x) \]
-    
-    \[ \textsf{enter}^{\#}\ \textsf{lv} = \emptyset\]
-    \[ \textsf{combine}^{\#}\ \textsf{lv}_\textsf{cr}\ \textsf{lv}_\textsf{ce} = \textsf{lv}_\textsf{cr} \cup \textsf{lv}_\textsf{ce} \]
+    \subsection{Improving the values-of-variables analysis}
+      \begin{align}
+        \textsf{combine}^{\#} \eta_\textsf{cr}\ \eta_\textsf{ce} = & \text{let } \eta'_\textsf{cr} = \eta_\textsf{cr} \backslash T_\textsf{ce} \text{ in} \\
+        & \text{let } \eta'_\textsf{ce} = \eta_\textsf{ce} \cap T_\textsf{ce} \text{ in} \\
+        & \eta'_\textsf{cr} \cup \eta'_\textsf{ce}
+      \end{align}
 
-
-    \subsection{Implementation}
-    % TODO: How did the implementation of Taint analysis go?
-
-  \section{Benefiting other Analyses}
-  In this section we will use the new taint analysis to improve a context insensitive analysis. For this let's choose an analysis that maps Lvalues to Rvalues.
-  When combining the contexts of the caller before the call with the one returned by the callee there a few aspects to keep in mind:
-  \begin{itemize}
-    \item All mappings of Lvalues, which are not tracked in the caller (i.e. map to top), but have a concrete value within the callee need to be added to the combined context. This is for Lvalues which are newly initialized inside the caller.
-    \item (All mappings which are not in the callee context but have been in the caller context need to be removed. This can happen in multithreaded programs, if in the caller a mutex was held, that then was unlocked by the callee, deleting the information protected by the mutex)
-    \item for all other Lvalues present in both contexts, the Rvalues mapped to by Lvalues not in the tainted set can be kept. We are sure that these variables are unchanged, even if they have a less precise record in the callee's context. For Lvalues present in the tainted set, it is necessary to take the Rvalue from the callee context, as the old Rvalue mapped to by the caller is incorrect.
-  \end{itemize}
-
-  Formal:\\
-
-  \begin{align}
-    \textsf{combine}^{\#} \eta_\textsf{cr}\ \eta_\textsf{ce} = & \text{let } \eta'_\textsf{cr} = \eta_\textsf{cr} \backslash \textsf{lv}_\textsf{ce} \text{ in} \\
-    & \text{let } \eta'_\textsf{ce} = \eta_\textsf{ce} \cap \textsf{lv}_\textsf{ce} \text{ in} \\
-    & \eta'_\textsf{cr} \cup \eta'_\textsf{ce}
-  \end{align}
-  % TODO: How did other Analyses benefit?
+  \section{Implementation}
+  % TODO: describe the implementation of taint (expand to lval)
 
 
