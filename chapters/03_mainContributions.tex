@@ -12,22 +12,21 @@
       \[\mathbb{D}_\textsf{t} = 2^X \text{ with } \sqsupseteq_\textsf{t} = \supseteq\]
       From that follows that we seek to compute a mapping from program points to sets of variables i.e. $\eta_\textsf{t}: N \rightarrow \mathbb{D}_\textsf{t}$. To interpret this with the goal of our taint analysis in mind, we note that $\eta_\textsf{t} [n] = T$ will denote that $T$ is the set of possibly tainted variables at program point $[n]$. Explained differently this means that for any variable $x \in T$ we cannot exclude that this variable was altered between the start of the procedure $[n]$ is in up until the program pint $[n]$.\\
       It remains to define $\textsf{init}^{\#}$, $\textsf{enter}^{\#}$ and $\textsf{combine}^{\#}$ as well as the abstract effects of actions $[\![  A ]\!]^{\#}$. Recall that the notion of a "tainted" variable is defined in relation to the current procedure. This means we want to start fresh whenever we enter a procedure and start without any variable being initially tainted. Since the same holds for the initial state we have 
-      \[\textsf{enter}^{\#} T = \textsf{init}^{\#} = \emptyset\]
+      \[\textsf{enter}^{\#}\ T = \textsf{init}^{\#} = \emptyset\]
       % Note here that this analysis is inherently context insensitive
       \\
       Each edge $e = (u, A, v)$ introduces the constraint $\eta_\textsf{t}\ [v] \sqsupseteq [\![  A ]\!]^{\#}  (\eta_\textsf{t}\ [u]) $\\
-      \[ [\![ x = y ]\!] ^{\#}\ T =  T \cup \{x\} \]
-      \[ [\![ ^*x = y ]\!] ^{\#}\ T =  T \cup \textsf{MayPointTo}(x) \]
-      
-      \[ \textsf{enter}^{\#}\ T = \emptyset\]
-      \[ \textsf{combine}^{\#}\ T_\textsf{cr}\ T_\textsf{ce} = T_\textsf{cr} \cup T_\textsf{ce} \]
+      \[ [\![ x = y; ]\!] ^{\#}\ T =  T \cup \{x\} \]
+      \[ [\![ ^*x = y; ]\!] ^{\#}\ T =  T \cup \textsf{MayPointTo}(x) \]
+
+      \[ \textsf{combine}^{\#}\ (T_\textsf{cr}, T_\textsf{ce}) = T_\textsf{cr} \cup T_\textsf{ce} \]
 
     \subsection{Improving the values-of-variables analysis}
-      \begin{align}
-        \textsf{combine}^{\#} \eta_\textsf{cr}\ \eta_\textsf{ce} = & \text{let } \eta'_\textsf{cr} = \eta_\textsf{cr} \backslash T_\textsf{ce} \text{ in} \\
-        & \text{let } \eta'_\textsf{ce} = \eta_\textsf{ce} \cap T_\textsf{ce} \text{ in} \\
-        & \eta'_\textsf{cr} \cup \eta'_\textsf{ce}
-      \end{align}
+      \begin{align*}
+        \textsf{combine}^{\#}\ m_\textsf{cr}\ m_\textsf{ce} = & \text{let } m'_\textsf{cr} = m_\textsf{cr}|_{Locals \cup (Globals \cap T_\textsf{ce})} \text{ in}\\
+        & \text{let } m'_\textsf{ce} = m_\textsf{ce}|_{Globals \cap T_\textsf{ce}}\text{ in} \\
+        & m'_\textsf{cr} \oplus m'_\textsf{ce}
+      \end{align*}
 
   \section{Implementation}
   % TODO: describe the implementation of taint (expand to lval)
