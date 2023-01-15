@@ -3,3 +3,4 @@ Goblint
 callee
 overapproximation
 Interprocedural
+powerset

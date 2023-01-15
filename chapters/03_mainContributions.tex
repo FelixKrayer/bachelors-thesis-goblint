@@ -6,11 +6,16 @@
   \section{Formal description}
     \subsection{Taint analysis}
       In this section we will propose our approach to reduce the aforementioned precision loss \ref{chapter:background}. The basic idea is to track for each procedure which variables have been written or have possibly been altered in some other way. This information is then used in the values-of-variables analysis when combining the abstract state from the caller with the abstract return state given by the callee at the end of the procedure.\\
-      In the following we will call a variable that has been written or altered in the current function context "tainted". Therefore, we introduce a new taint analysis tracking which variables have been tainted within the context of the current function.\\
+      In the following we will call a variable that has been written or altered in the current procedure context "tainted". Therefore, we introduce a new taint analysis tracking which variables have been tainted within the context of the current procedure.\\
       First we formalize our taint analysis in the syntax for flow sensitive analyses we have built in the previous chapter \ref{chapter:background}:\\
-      $\mathbb{D}_\textsf{t} = 2^X$ with $\sqsupseteq = \supseteq$\\
-      $\eta_\textsf{t}: N \rightarrow \mathbb{D}_\textsf{t}$\\
-      Each edge $e = (u, A, v)$ introduces the constraint $\eta_\textsf{t}\ [v] \sqsupseteq [\![  A ]\!] ^{\#}  (\eta_\textsf{t}\ [u]) $\\
+      The Domain for this Analysis is the powerset of the set of variables $X$ with the regular subset ordering:
+      \[\mathbb{D}_\textsf{t} = 2^X \text{ with } \sqsupseteq_\textsf{t} = \supseteq\]
+      From that follows that we seek to compute a mapping from program points to sets of variables i.e. $\eta_\textsf{t}: N \rightarrow \mathbb{D}_\textsf{t}$. To interpret this with the goal of our taint analysis in mind, we note that $\eta_\textsf{t} [n] = T$ will denote that $T$ is the set of possibly tainted variables at program point $[n]$. Explained differently this means that for any variable $x \in T$ we cannot exclude that this variable was altered between the start of the procedure $[n]$ is in up until the program pint $[n]$.\\
+      It remains to define $\textsf{init}^{\#}$, $\textsf{enter}^{\#}$ and $\textsf{combine}^{\#}$ as well as the abstract effects of actions $[\![  A ]\!]^{\#}$. Recall that the notion of a "tainted" variable is defined in relation to the current procedure. This means we want to start fresh whenever we enter a procedure and start without any variable being initially tainted. Since the same holds for the initial state we have 
+      \[\textsf{enter}^{\#} T = \textsf{init}^{\#} = \emptyset\]
+      % Note here that this analysis is inherently context insensitive
+      \\
+      Each edge $e = (u, A, v)$ introduces the constraint $\eta_\textsf{t}\ [v] \sqsupseteq [\![  A ]\!]^{\#}  (\eta_\textsf{t}\ [u]) $\\
       \[ [\![ x = y ]\!] ^{\#}\ T =  T \cup \{x\} \]
       \[ [\![ ^*x = y ]\!] ^{\#}\ T =  T \cup \textsf{MayPointTo}(x) \]
       
