@@ -23,9 +23,9 @@
 
     \subsection{Improving the values-of-variables analysis}
       \begin{align*}
-        \textsf{combine}^{\#}\ m_\textsf{cr}\ m_\textsf{ce} = & \text{let } m'_\textsf{cr} = m_\textsf{cr}|_{Locals \cup (Globals \cap T_\textsf{ce})} \text{ in}\\
-        & \text{let } m'_\textsf{ce} = m_\textsf{ce}|_{Globals \cap T_\textsf{ce}}\text{ in} \\
-        & m'_\textsf{cr} \oplus m'_\textsf{ce}
+        \textsf{combine}^{\#}\ M_\textsf{cr}\ M_\textsf{ce} = & \text{let } M'_\textsf{cr} = M_\textsf{cr}|_{Locals \cup (Globals \cap T_\textsf{ce})} \text{ in}\\
+        & \text{let } M'_\textsf{ce} = M_\textsf{ce}|_{Globals \cap T_\textsf{ce}}\text{ in} \\
+        & M'_\textsf{cr} \oplus M'_\textsf{ce}
       \end{align*}
 
   \section{Implementation}

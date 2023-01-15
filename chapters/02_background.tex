@@ -47,12 +47,12 @@
     where $[\![A]\!]^{\#}$ denotes the abstract effect of the action $A$ defining our analysis. In addition, we need a start state. This is given by $\textsf{init}^{\#}: \mathbb{D}$ which is defined depending on the analysis. This gives raise to the start constraint $\eta\ [s] \sqsupseteq \textsf{init}^{\#}$.\\
     \\
     % TODO: Summarize analysis equations
-    We will show these ideas with our example of the values-of-variables analysis: Let us define the partial ordering $\sqsupseteq_\textsf{v}$ that will be used in the constraints. We will do this by saying that a mapping $m_1 \in \mathbb{D}_\textsf{v}$ is ordered above another mapping $m_2$ iff for every variable the set it is mapped to in $m_1$ is a superset of the one the variable is mapped to in $m_2$. Formulated formally this is:
-    \[m_1, m_2 \in \mathbb{D}_\textsf{v}: m_1 \sqsupseteq_\textsf{v} m_2 \Longleftrightarrow \forall x \in X: m_1\ x \supseteq m_2\ x\]
-    Next we define the start state $\textsf{init}^{\#} = m_\top$ for this domain as the mapping that maps every variable to the full set of integers $\mathbb{N}$ i.e. $\forall x \in X: m_\top\ x = \mathbb{N}$. This is because we assume variables to be randomly initialized in our toy language.\\
+    We will show these ideas with our example of the values-of-variables analysis: Let us define the partial ordering $\sqsupseteq_\textsf{v}$ that will be used in the constraints. We will do this by saying that a mapping $M_1 \in \mathbb{D}_\textsf{v}$ is ordered above another mapping $M_2$ iff for every variable the set it is mapped to in $M_1$ is a superset of the one the variable is mapped to in $M_2$. Formulated formally this is:
+    \[M_1, M_2 \in \mathbb{D}_\textsf{v}: M_1 \sqsupseteq_\textsf{v} M_2 \Longleftrightarrow \forall x \in X: M_1\ x \supseteq M_2\ x\]
+    Next we define the start state $\textsf{init}^{\#} = M_\top$ for this domain as the mapping that maps every variable to the full set of integers $\mathbb{N}$ i.e. $\forall x \in X: M_\top\ x = \mathbb{N}$. This is because we assume variables to be randomly initialized in our toy language.\\
     It remains to define the abstract effect of actions $[\![A]\!]^{\#}_\textsf{v}$ for our values-of-variables analysis. We will just show the effect of a simple variable assignment:
-    \[ [\![ x=y; ]\!]^{\#}_\textsf{v}\ m = m \oplus \{x \mapsto (m\ y) \} \]
-    where $m \oplus \{x \mapsto s\}$ denotes that the mapping $m$ is updated such that $x$ will be mapped to the set $s$. The full definition of abstract effects of a values-of-variables analysis can be found at <// TODO>.\\
+    \[ [\![ x=y; ]\!]^{\#}_\textsf{v}\ M = M \oplus \{x \mapsto (M\ y) \} \]
+    where $M \oplus \{x \mapsto s\}$ denotes that the mapping $M$ is updated such that $x$ will be mapped to the set $s$. The full definition of abstract effects of a values-of-variables analysis can be found at <// TODO>.\\
     % TODO: ref something for full description? Appendix?
 
     \subsection{Interprocedural analysis}
@@ -66,9 +66,9 @@
     This behavior of only analyzing the procedures once with the least upper bound of all calling contexts is what we call "context insensitivity". It is quite efficient but at the same time not very precise.\\ 
     \\
     For our values-of-variables analysis we will show how $\textsf{enter}^{\#}_\textsf{v}$ and $\textsf{combine}^{\#}_\textsf{v}$ are defined. We need to take global variables into account when computing the calling context and combining after the call. Therefore, we define the two functions as follows:
-    \[\textsf{enter}^{\#}_\textsf{v}\ m = m|_{Globals} \oplus \{x \mapsto \mathbb{N} | \forall x \in X\}|_{Locals} \]
-    \[\textsf{combine}^{\#}_\textsf{v}\ (m_\textsf{cr}, m_\textsf{ce}) = m_\textsf{cr}|_{Locals} \oplus m_\textsf{ce}|_{Globals} \]
-    where $m|_{Locals}$ and $m|_{globals}$ refers to the mapping $m$ restricted to only the local or global variables respectively. Note that $Locals$ refers to the locals of the callee for $\textsf{enter}^{\#}_\textsf{v}$ while it refers to the locals of the caller for $\textsf{combine}^{\#}_\textsf{v}$.\\
+    \[\textsf{enter}^{\#}_\textsf{v}\ M = M|_{Globals} \oplus \{x \mapsto \mathbb{N} | \forall x \in X\}|_{Locals} \]
+    \[\textsf{combine}^{\#}_\textsf{v}\ (M_\textsf{cr}, M_\textsf{ce}) = M_\textsf{cr}|_{Locals} \oplus M_\textsf{ce}|_{Globals} \]
+    where $M|_{Locals}$ and $M|_{globals}$ refers to the mapping $M$ restricted to only the local or global variables respectively. Note that $Locals$ refers to the locals of the callee for $\textsf{enter}^{\#}_\textsf{v}$ while it refers to the locals of the caller for $\textsf{combine}^{\#}_\textsf{v}$.\\
     To explain these two function let us first look at $\textsf{enter}^{\#}_\textsf{v}$. This function takes the part of the mapping from the caller that contains information about global variables and adds the information of uninitialized local variables used in the procedure to the state. For $\textsf{combine}^{\#}_\textsf{v}$ the local part from the callee is kept, but it is updated with the global part of the callee return state as this contains the updated information about global variables after the procedure call.\\
     % TODO: concrete example of enter from multiple contexts?
     % TODO: describe precision loss here already?
