@@ -28,10 +28,11 @@
 
   \section{Static Analysis}
   Static analysis is defined by Rival~\parencite{rival2020introduction} as "[...]an automatic technique that approximates in a conservative manner semantic properties of programs before their execution". This means that the program is analyzed just by the given source code without execution. The goal is to prove certain properties about the program in a "sound" manner i.e. any property that is proven to hold actually does hold. However, from failing to prove a property one cannot conclude that the given property does not hold.\\
-  In order to prove properties, e.g. finding that a program does not contain races or identifying dead code, we need to gain information about the program. This is done by performing various kinds of analyses. We will focus on flow sensitive analyses from now on i.e. analyses which find properties of the program dependent on the location within it. The semantic of these will be introduced in the following chapters.
+  In order to prove properties, e.g. finding that a program does not contain races or identifying dead code, we need to gain information about the program. This is done by performing various kinds of analyses. We will focus on flow sensitive analyses from now on i.e. analyses which find properties of the program dependent on the location within it. The semantic of these will be introduced in the following chapters.\\
+
+    // TODO: talk about Abstract Interpretation.
   
     \subsection{Flow sensitive analysis}
-
     As noted above flow sensitive analyses find properties of the program dependent on the point within the program. Expressed differently this means a flow sensitive analysis will find an overapproximation of states the program may be in for any given point within the program or "program point". This state can describe many things dependent on the analysis performed.\\
     First let us define what a program point is: Imagine a \ac{CFG}, where nodes represent points between instructions within the program. Edges are labeled with instructions or checks (from now on collectively called "actions") and describe the transitions between these points (see example \autoref{fig:example_cfg}). Then any node on this \ac{CFG} would be what we call a program point.\\
     Concretely let $N$ be the set of all program points. Furthermore, let $\mathbb{D}$ be a Domain containing abstract states describing concrete states of the program. This means that some $d \in \mathbb{D}$ can describe many states the program can be in.\\ 
@@ -70,14 +71,15 @@
     \[\textsf{combine}^{\#}_\textsf{v}\ (M_\textsf{cr}, M_\textsf{ce}) = M_\textsf{cr}|_{Locals_\textsf{cr}} \oplus M_\textsf{ce}|_{Globals} \]
     where $M|_{Locals}$ and $M|_{Globals}$ refers to the mapping $M$ restricted to only the local or global variables respectively. Note that $Locals_\textsf{ce}$ refers to the locals of the callee while $Locals_\textsf{cr}$ refers to the locals of the caller.\\
     To explain these two function let us first look at $\textsf{enter}^{\#}_\textsf{v}$. This function takes the part of the mapping from the caller that contains information about global variables and adds the information of uninitialized local variables used in the procedure to the state. For $\textsf{combine}^{\#}_\textsf{v}$ the local part from the callee is kept, but it is updated with the global part of the callee return state as this contains the updated information about global variables after the procedure call.\\
-    % TODO: concrete example of enter from multiple contexts?
-    % TODO: describe precision loss here already?
 
     \subsection{Context sensitivity}
+    The context insensitive approach in the previous chapter is not very precise. Imagine a procedure that simply increments a global variable $a$ by one. Whenever this procedure is called, our values-of-variables 
 
     \subsection{Partial context sensitivity}
 
-    \subsection{Precision loss}
+    \subsection{Precision loss}\label{section:precisionLoss} 
+      % TODO: concrete example of enter from multiple contexts?
+      % TODO: describe precision loss here already?
     
   
 
