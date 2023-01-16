@@ -24,9 +24,42 @@
 \usepackage{booktabs}
 \usepackage[final]{microtype}
 \usepackage{caption}
+\usepackage[printonlyused]{acronym}
 \usepackage[hidelinks]{hyperref} % hidelinks removes colored boxes around references and links
 \usepackage{amsmath}
 \usepackage{subcaption}
+\AtBeginDocument{%
+	\hypersetup{
+		pdftitle=\getTitle,
+		pdfauthor=\getAuthor,
+	}
+}
+\usepackage{ifthen}
+
+\addto\extrasamerican{
+	\def\lstnumberautorefname{Line}
+	\def\chapterautorefname{Chapter}
+	\def\sectionautorefname{Section}
+	\def\subsectionautorefname{Subsection}
+	\def\subsubsectionautorefname{Subsubsection}
+}
+
+\addto\extrasngerman{
+	\def\lstnumberautorefname{Zeile}
+}
+
+% Themes
+\ifthenelse{\equal{\detokenize{dark}}{\jobname}}{%
+  % Dark theme
+  \newcommand{\bg}{black} % background
+  \newcommand{\fg}{white} % foreground
+  \usepackage[pagecolor=\bg]{pagecolor}
+  \color{\fg}
+}{%
+  % Light theme
+  \newcommand{\bg}{white} % background
+  \newcommand{\fg}{black} % foreground
+}
 
 \bibliography{bibliography}
 
@@ -71,4 +104,5 @@
   keywordstyle=\bfseries\color{TUMBlue},
   stringstyle=\color{TUMAccentGreen},
   commentstyle=\color{TUMAccentGreen}
+  captionpos=b
 }
