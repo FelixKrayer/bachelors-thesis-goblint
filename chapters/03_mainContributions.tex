@@ -5,9 +5,9 @@
 
   \section{Formal description}
     \subsection{Taint analysis}
-      In this section we will propose our approach to reduce the aforementioned precision loss \ref{chapter:background}. The basic idea is to track for each procedure which variables have been written or have possibly been altered in some other way. This information is then used in the values-of-variables analysis when combining the abstract state from the caller with the abstract return state given by the callee at the end of the procedure.\\
+      In this section we will propose our approach to reduce the aforementioned precision loss (\autoref{chapter:background}). The basic idea is to track for each procedure which variables have been written or have possibly been altered in some other way. This information is then used in the values-of-variables analysis when combining the abstract state from the caller with the abstract return state given by the callee at the end of the procedure.\\
       In the following we will call a variable that has been written or altered in the current procedure context "tainted". Therefore, we introduce a new taint analysis tracking which variables have been tainted within the context of the current procedure.\\
-      First we formalize our taint analysis in the syntax for flow sensitive analyses we have built in the previous chapter \ref{chapter:background}:\\
+      First we formalize our taint analysis in the syntax for flow sensitive analyses we have built in the previous \autoref{chapter:background}:\\
       The Domain for this Analysis is the powerset of the set of variables $X$ with the regular subset ordering:
       \[\mathbb{D}_\textsf{t} = 2^X \text{ with } \sqsupseteq_\textsf{t} = \supseteq\]
       From that follows that we seek to compute a mapping from program points to sets of variables i.e. $\eta_\textsf{t}: N \rightarrow \mathbb{D}_\textsf{t}$. To interpret this with the goal of our taint analysis in mind, we note that $\eta_\textsf{t} [n] = T$ will denote that $T$ is the set of possibly tainted variables at program point $[n]$. Expressed differently this means that for any variable $x \in T$ we cannot exclude that this variable was altered between the start of the procedure $[n]$ is in up until the program pint $[n]$.\\
