@@ -2,50 +2,94 @@
 % Add the above to each chapter to make compiling the PDF easier in some editors.
 
 \chapter{Combatting Precision Loss}\label{chapter:mainContributions}
-  In this chapter we will describe our approach to reduce the precision loss described in \autoref{section:precisionLoss}. We will first use the syntax for flow sensitive analyses from \autoref{chapter:background} to formally define the idea. After that we explain the concrete implementation of the approach into the \gob analyzer.
+  In this chapter we will describe our approach to reduce the precision loss described in \autoref{section:precisionLoss}. We will first use the syntax for flow sensitive analyses from \autoref{chapter:background} to formally define the idea. After that we explain the concrete implementation of the approach into the \gob\ analyzer.
   \section{Formal description}
-    \subsection{Taint analysis}
-      The basic idea to combat the precison loss is to track for each procedure which variables have been written or have possibly been altered in some other way. This information is then used in the values-of-variables analysis when combining the abstract state from the caller with the abstract return state given by the callee at the end of the procedure.\\
+    \subsection{Taint analysis}\label{section:formalTaint}
+      The basic idea to combat the precision loss is to track for each procedure which variables have been written or have possibly been altered in some other way. This information is then used in the values-of-variables analysis when combining the abstract state from the caller with the abstract return state given by the callee at the end of the procedure.\\
       In the following we will call a variable that has been written or altered in the current procedure context "tainted". Therefore, we introduce a new taint analysis tracking which variables have been tainted within the context of the current procedure. It is worth mentioning that our notion of taintedness is related but different from other uses of this concept.\\
       \\
       Let us now formulate the syntax for our taint analysis:
       Since we want to find a collection of tainted variables per program point, a suitable domain for this analysis is the powerset of the set of variables $X$ ordered by the subset relation:
       \[\mathbb{D}_\textsf{t} = 2^X \text{ with } \sqsupseteq_\textsf{t} = \supseteq\]
       From that follows that we seek to compute a mapping from program points to sets of variables i.e. $\eta_\textsf{t}: N \rightarrow \mathbb{D}_\textsf{t}$. To interpret this with the goal of our taint analysis in mind, we note that $\eta_\textsf{t} [n] = T$ will denote that $T$ is the set of possibly tainted variables at program point $[n]$. Expressed differently this means that for any variable $x \in T$ we cannot exclude that this variable was altered between the start of the procedure $[n]$ is in up until the program pint $[n]$.\\
-      It remains to define $\textsf{init}^{\#}$, $\textsf{enter}^{\#}$ and $\textsf{combine}^{\#}$ as well as the abstract effects of actions $[\![  A ]\!]^{\#}$. Recall that the notion of a "tainted" variable is defined in relation to the current procedure. This means we want to start fresh whenever we enter a procedure and start without any variable being initially tainted. Since the same holds for the initial state we have 
+      It remains to define $\textsf{init}^{\#}_\textsf{t}$, $\textsf{enter}^{\#}_\textsf{t}$ and $\textsf{combine}^{\#}_\textsf{t}$ as well as the abstract effects of actions $[\![  A ]\!]^{\#}$. Recall that the notion of a "tainted" variable is defined in relation to the current procedure. This means we want to start fresh whenever we enter a procedure and start without any variable being initially tainted. Since the same holds for the initial state we have 
       \[\textsf{enter}^{\#}\ T = \textsf{init}^{\#} = \emptyset\]
-      When combining the caller state with the returned callee state, we note that anything that we need to keep the tainted set from before the call, as a tainted variable can get never get "untainted" again, no matter what the procedure does. In addition to that we will add the set returned by the callee, as anything tainted in the call needs to be considered tainted in the caller as well. This is because we want to know which variables have been altered in a procedure call, no matter if the tainting happened within the procedure itself or within a procedure called by the procedure. This leaves us with the following equation for the $\textsf{combine}^{\#}$ function:
-      \[ \textsf{combine}^{\#}\ (T_\textsf{cr}, T_\textsf{ce}) = T_\textsf{cr} \cup (T_\textsf{ce} \backslash Locals_\textsf{ce}) \]
-      Note that we removed the callee local variables $Locals_\textsf{ce}$ because these are not accessible by the caller and all of its callers anyway, so it is not useful to keep track of them.
-      It is also worth pointing out that the function $\textsf{enter}^{\#} T$ is always equal to the empty set irregardles of its argument $T$. Therefore it computes the same function context for each call of a certain procedure making our taint analysis inherently context insensitive.
-      
-      // \textbf{WIP:}\\
-      \\
-      Each edge $e = (u, A, v)$ introduces the constraint $\eta_\textsf{t}\ [v] \sqsupseteq [\![  A ]\!]^{\#}  (\eta_\textsf{t}\ [u]) $\\
-      \[ [\![ x = y; ]\!] ^{\#}\ T =  T \cup \{x\} \]
-
+      It is worth pointing out here that the function $\textsf{enter}^{\#}_\textsf{t} T$ is always equal to the empty set irregardless of its argument $T$. Therefore, it computes the same function context for each call of a certain procedure making our taint analysis inherently context insensitive.\\
+      When combining the caller state with the returned callee state, we note that anything that we need to keep the tainted set from before the call, as a tainted variable can get never get "untainted" again, no matter what the procedure does. In addition to that we will add the set returned by the callee, as anything tainted in the call needs to be considered tainted in the caller as well. This is because we want to know which variables have been altered in a procedure call, no matter if the tainting happened within the procedure itself or within a procedure called by the procedure. This leaves us with the following equation for the $\textsf{combine}^{\#}_\textsf{t}$ function:
+      \[ \textsf{combine}^{\#}_\textsf{t}\ (T_\textsf{cr}, T_\textsf{ce}) = T_\textsf{cr} \cup (T_\textsf{ce} \backslash Locals_\textsf{ce}) \]
+      Note that we removed the callee local variables $Locals_\textsf{ce}$ because these are not accessible by the caller and all of its callers anyway, so it is not useful to keep track of them.\\
+      Lastly we define the abstract effects of actions. Most of these (including checks) do not do anything besides propagating through the state from before. The only major exception is a variable assignment. For these we note that this specific variable, which the value is assigned to is added to the tainted set. This is independent of the expression that evaluates to the assigned value, as we are only interested in the fact that the variable on the left of the assignment is altered. This leaves us with the following abstract effects of actions:
+      \[ [\![ A ]\!] ^{\#}\ T = \left\{ \begin{array}{lcr}
+        T \cup \{x\} & \text{if }A \equiv (x = e;)\\
+        T & \text{else}
+      \end{array} \right.   \]
+      where $e$ is any arbitrary expression.\\
+      This concludes our definition of the taint analysis. In the following chapter we will see how this information helps us to improve the values-of-variables analysis.
 
     \subsection{Improving the values-of-variables analysis}
-    //\textbf{WIP:}\\
-      \begin{align*}
-        \textsf{combine}^{\#}\ M_\textsf{cr}\ M_\textsf{ce} = & \text{let } M'_\textsf{cr} = M_\textsf{cr}|_{Locals_\textsf{cr} \cup (Globals \cap T_\textsf{ce})} \text{ in}\\
-        & \text{let } M'_\textsf{ce} = M_\textsf{ce}|_{Globals \cap T_\textsf{ce}}\text{ in} \\
-        & M'_\textsf{cr} \oplus M'_\textsf{ce}
-      \end{align*}
+    Recall the source of the precision loss we want to reduce. This happened when a global variable was updated with a less precise value after a procedure call even though this specific variable was not changed by the call.\\
+    Thanks to the taint analysis we defined above, we now do have the information which variables can be altered by a procedure $f()$ and which surely stay untouched. These are exactly those variables which are not in the tainted set of the end node $[e_f]$ for that procedure.\\
+    With this insight we can now update the $\textsf{combine}^{\#}_\textsf{v}$ function of our values-of-variables analysis as follows:
+    \[
+      \textsf{combine}^{\#}_\textsf{v}\ (M_\textsf{cr}, M_\textsf{ce}) = M_\textsf{cr}|_{Locals_\textsf{cr}\, \cup\, (Globals\, \textbackslash\, T_\textsf{ce})} \oplus M_\textsf{ce}|_{Globals\, \cap\, T_\textsf{ce}}
+    \]
+    where for an edge $(u, f();, v)$ we have $T_\textsf{ce} = \eta_\textsf{t}\ [e_f]$.\\
+    Similar to before the $\textsf{combine}^{\#}_\textsf{v}$ function takes the caller mapping, restricts is to a subset of caller reachable variables and updates this mapping with the callee mapping restricted to the rest of caller reachable variables. In other words, the caller reachable variables are partitioned into two sets such that one subset is taken from the caller state while the other one is taken from the callee state. Before this change the partitionig was done strictly in such a way that the local variables were taken from the caller state and all global variables from the callee state. After this change, the global variables that are not tainted by the callee are also taken from the caller state and not from the callee anymore. Thereby the precision loss for untainted variables is eliminated.
+    \\
+    % TODO: remove this "proof"?
+    One might wonder if this change could lead to a case, where the callee state has a more precise value for a variable that is discarded because this variable is not in the tainted set. Concretely this situation would be described by 
+    \[\exists \text{ Edge }(u, f();, v),\ x \in Globals: x \notin \eta_\textsf{t}\ [e_f] \land (\eta_\textsf{v}\ [e_f]\ x\subset \eta_\textsf{v}\ [u]\ x)\]
+    From $x \notin \eta_\textsf{t}\ [e_f]$ we know that $x$ has not been altered in the procedure $f()$ since the node $[s_f]$, and therefore it holds that 
+    \[\eta_\textsf{v}\ [e_f]\ x = \eta_\textsf{v}\ [s_f]\ x\]
+    By the definitions of $\sqsupseteq_\textsf{v}$ and $\textsf{enter}^{\#}_\textsf{v}$ we get: 
+    \[\eta_\textsf{v}\ [s_f]\ x \supseteq (\textsf{enter}^{\#}_\textsf{v}\ (\eta_\textsf{v}\ [u]))\ x = \eta_\textsf{v}\ [u]\ x\]
+    Therefore, $\eta_\textsf{v}\ [e_f]\ x\supseteq \eta_\textsf{v}\ [u]\ x$ which is a contradiction to the proposed case which we can therefore exclude.
 
   \section{Implementation}
-  //\textbf{WIP:}\\
-    The \gob analyzer provides a framework for static analyses.\\ 
-    // signature from analysis.ml\\
-    \\
+  % TODO small schematic
+  We will quickly introduce the \gob\ analyzer and its structure before we explain the process of implementing the proposed taint analysis as well as its usage to improve other analyses. The core functionality of \gob\ is to statically analyze C programs using an approach similar to the one described in \autoref{chapter:background}. This generally works as follows: After the C input file is preprocessed, a \ac{CFG} is generated. This is then used together with the specifications of various analyses to generate a constraint system. \gob\ solves this constraint system and produces different kinds of outputs to the user according to the solution (e.g. notifications, warnings or a visualization of the full solution).\\
+  It is worth mentioning that \gob\ can perform multiple analyses on a program at the same time. For this a compound domain is used that is a tuple of all the domains of the analyses to be performed. To generate constraints, all activated analyses are taken into account where the specification of each analysis acts on its corresponding part of the compound domain. Information can be transferred between the different analyses via a system called "queries".\\
+  % TODO: Improve:
+  \autoref{fig:gob_structure_detail} shows the inner structure of the analyzer. We can see that \gob\ provides parametrized domains which can be used in the specifications of the analyses. It is also shown that multiple analyses are then combined into one MCP that is then used with the \ac{CFG} to generate constraints which are solved.
+  
+  For a deeper insight into the inner workings of \gob\ refer to \parencite{apinis2014frameworks}.
+  
+    \subsection{Taint analysis}
+    To define an analysis the \gob\ analyzer provides an interface, where the relevant parts can be seen in \autoref{fig:analysis_interface}. 
+    For our taint analysis we created a new module implementing this interface.
+
+
     As a domain we chose not a set of variables, but a set of lvalues, where an lvalue can be any left hand side of an assignment instruction. Examples of lvalues are: the variable $x$, the memory location $*xptr$ pointed to by the pointer $xptr$, the third place $a[3]$ in an array $a$, the member $frac.n$ of a struct $frac$ and many more. This allows us to find that only a part of an array or structure is tainted, so we can keep most of these and only update the tainted lvalues.\\
-    //TOP necessary\\
+    - topped set necessary ("full set of lvalues" not possible/impractical)\\
     However analyzing the full language C instead of our toy language, it is necessary to take care of further challenges like pointers and library or unknown functions.\\
-    // \gob provides \textsf{MayPointTo}()\\
-    // \gob provides library descriptors -> unknown = top\\
+    - \gob\ provides \textsf{MayPointTo}()\\
+    - \gob\ provides library descriptors -> unknown = top\\
+
+    \subsection{Benefiting other analyses}
+    - main part: base Analysis:
+    \begin{itemize}
+      \item mappings of lvalues new to the caller are taken from callee e.g. newly allocated memory on callee
+      \item mappings not in callee state but are in caller context need to be removed -> in multithreaded programs, if in the caller a mutex was held but unlocked by the callee
+      \item other: keep values from caller if untainted. Lvalues present in the tainted are overwritten with values from callee by folding over tainted set.
+    \end{itemize}
+    - relation analysis (apron) benefited in a similar way\\
+    - mention varEq and condVars for completion??\\
 
 
+    \begin{figure}
+      \centering
+      \lstinputlisting[language={[Objective]Caml}]{../code/analyses.ml}
+      \caption{Simplified Interface for implementing analyses in \gob}
+      \label{fig:analysis_interface}
+      %TODO: reference github for this file
+    \end{figure}
 
+  
+    \begin{figure}
+      \centering
+      \includegraphics{../figures/goblint_structure_detailed.jpg}
+      \caption{Schematic directory structure of \gob. Adapted from \parencite{apinis2014frameworks}}
+      \label{fig:gob_structure_detail}
+    \end{figure}
 
-
-
+  -- Full New Section: ThreadCreate analysis

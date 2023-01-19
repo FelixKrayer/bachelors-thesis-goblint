@@ -28,8 +28,8 @@
 
   \section{Static Analysis}
   Static analysis is defined by Rival~\parencite{rival2020introduction} as "[...]an automatic technique that approximates in a conservative manner semantic properties of programs before their execution". This means that the program is analyzed just by the given source code without execution. The goal is to prove certain properties about the program in a "sound" manner i.e. any property that is proven to hold actually does hold. However, from failing to prove a property one cannot conclude that the given property does not hold.\\
-  In order to prove properties, e.g. finding that a program does not contain races or identifying dead code, we need to gain information about the program. This is done by performing various kinds of analyses. We will focus on flow sensitive analyses from now on i.e. analyses which find properties of the program dependent on the location within it. The semantic of these will be introduced in the following chapters.\\
-
+  In order to prove properties, e.g. finding that a program does not contain races or identifying dead code, we need to gain information about the program. This is done by performing various kinds of analyses. We will focus on flow sensitive analyses from now on i.e. analyses which find properties of the program dependent on the location within it. We will introduce a syntax to formalize flow sensitive analyses in the following sections. This formalization approach is heavily based on \parencite{apinis2012side}.
+    
     // TODO: talk about Abstract Interpretation.
   
     \subsection{Flow sensitive analysis}
@@ -53,7 +53,7 @@
     Next we define the start state $\textsf{init}^{\#} = M_\top$ for this domain as the mapping that maps every variable to the full set of integers $\mathbb{N}$ i.e. $\forall x \in X: M_\top\ x = \mathbb{N}$. This is because we assume variables to be randomly initialized in our toy language.\\
     It remains to define the abstract effect of actions $[\![A]\!]^{\#}_\textsf{v}$ for our values-of-variables analysis. We will just show the effect of a simple variable assignment:
     \[ [\![ x=y; ]\!]^{\#}_\textsf{v}\ M = M \oplus \{x \mapsto (M\ y) \} \]
-    where $M \oplus \{x \mapsto s\}$ denotes that the mapping $M$ is updated such that $x$ will be mapped to the set $s$. The full definition of abstract effects of a values-of-variables analysis can be found at <// TODO>.\\
+    where $M \oplus \{x \mapsto s\}$ denotes that the mapping $M$ is updated such that $x$ will be mapped to the set $s$. A full definition of abstract effects of a values-of-variables analysis can be found at <// TODO >.\\
     % TODO: ref something for full description? Appendix?
 
     \subsection{Interprocedural analysis}
@@ -73,13 +73,14 @@
     To explain these two function let us first look at $\textsf{enter}^{\#}_\textsf{v}$. This function takes the part of the mapping from the caller that contains information about global variables and adds the information of uninitialized local variables used in the procedure to the state. For $\textsf{combine}^{\#}_\textsf{v}$ the local part from the callee is kept, but it is updated with the global part of the callee return state as this contains the updated information about global variables after the procedure call.\\
 
     \subsection{Context sensitivity}
-    The context insensitive approach in the previous chapter is not very precise. Imagine a procedure that simply increments a global variable $a$ by one. Whenever this procedure is called, our values-of-variables 
+    //\textbf{WIP:}\\
+    The context insensitive approach in the previous chapter is not very precise.\\
+    - example: procedure that simply increments a global variable $a$ by one, called with different values for $a$
 
     \subsection{Partial context sensitivity}
 
-    \subsection{Precision loss}\label{section:precisionLoss} 
-      % TODO: concrete example of enter from multiple contexts?
-      % TODO: describe precision loss here already?
+    \subsection{Precision loss}\label{section:precisionLoss}
+    - example from above expanded with a second global variable that is not altered but experiences precision loss
     
   
 
