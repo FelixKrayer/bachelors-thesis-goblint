@@ -13,7 +13,7 @@
       \[\mathbb{D}_\textsf{t} = 2^X \text{ with } \sqsupseteq_\textsf{t} = \supseteq\]
       From that follows that we seek to compute a mapping from program points to sets of variables i.e. $\eta_\textsf{t}: N \rightarrow \mathbb{D}_\textsf{t}$. To interpret this with the goal of our taint analysis in mind, we note that $\eta_\textsf{t} [n] = T$ will denote that $T$ is the set of possibly tainted variables at program point $[n]$. Expressed differently this means that for any variable $x \in T$ we cannot exclude that this variable was altered between the start of the procedure $[n]$ is in up until the program pint $[n]$.\\
       It remains to define $\textsf{init}^{\#}_\textsf{t}$, $\textsf{enter}^{\#}_\textsf{t}$ and $\textsf{combine}^{\#}_\textsf{t}$ as well as the abstract effects of actions $[\![  A ]\!]^{\#}$. Recall that the notion of a "tainted" variable is defined in relation to the current procedure. This means we want to start fresh whenever we enter a procedure and start without any variable being initially tainted. Since the same holds for the initial state we have 
-      \[\textsf{enter}^{\#}\ T = \textsf{init}^{\#} = \emptyset\]
+      \[\textsf{enter}^{\#}_\textsf{t}\ T = \textsf{init}^{\#}_\textsf{t} = \emptyset\]
       It is worth pointing out here that the function $\textsf{enter}^{\#}_\textsf{t} T$ is always equal to the empty set irregardless of its argument $T$. Therefore, it computes the same function context for each call of a certain procedure making our taint analysis inherently context insensitive.\\
       When combining the caller state with the returned callee state, we note that anything that we need to keep the tainted set from before the call, as a tainted variable can get never get "untainted" again, no matter what the procedure does. In addition to that we will add the set returned by the callee, as anything tainted in the call needs to be considered tainted in the caller as well. This is because we want to know which variables have been altered in a procedure call, no matter if the tainting happened within the procedure itself or within a procedure called by the procedure. This leaves us with the following equation for the $\textsf{combine}^{\#}_\textsf{t}$ function:
       \[ \textsf{combine}^{\#}_\textsf{t}\ (T_\textsf{cr}, T_\textsf{ce}) = T_\textsf{cr} \cup (T_\textsf{ce} \backslash Locals_\textsf{ce}) \]
@@ -48,19 +48,33 @@
   \section{Implementation}
   % TODO small schematic
   We will quickly introduce the \gob\ analyzer and its structure before we explain the process of implementing the proposed taint analysis as well as its usage to improve other analyses. The core functionality of \gob\ is to statically analyze C programs using an approach similar to the one described in \autoref{chapter:background}. This generally works as follows: After the C input file is preprocessed, a \ac{CFG} is generated. This is then used together with the specifications of various analyses to generate a constraint system. \gob\ solves this constraint system and produces different kinds of outputs to the user according to the solution (e.g. notifications, warnings or a visualization of the full solution).\\
-  It is worth mentioning that \gob\ can perform multiple analyses on a program at the same time. For this a compound domain is used that is a tuple of all the domains of the analyses to be performed. To generate constraints, all activated analyses are taken into account where the specification of each analysis acts on its corresponding part of the compound domain. Information can be transferred between the different analyses via a system called "queries".\\
+  It is worth mentioning that \gob\ can perform multiple analyses on a program at the same time. For this a compound domain is built that is a tuple of all the domains of the analyses to be performed. To generate constraints, all activated analyses are taken into account where the specification of each analysis acts on its corresponding part of the compound domain. Information can be transferred between the different analyses via a system called "queries".\\
   % TODO: Improve:
   \autoref{fig:gob_structure_detail} shows the inner structure of the analyzer. We can see that \gob\ provides parametrized domains which can be used in the specifications of the analyses. It is also shown that multiple analyses are then combined into one MCP that is then used with the \ac{CFG} to generate constraints which are solved.
   
   For a deeper insight into the inner workings of \gob\ refer to \parencite{apinis2014frameworks}.
   
     \subsection{Taint analysis}
-    To define an analysis the \gob\ analyzer provides an interface, where the relevant parts can be seen in \autoref{fig:analysis_interface}. 
-    For our taint analysis we created a new module implementing this interface.
+    To define an analysis the \gob\ analyzer provides an interface, where the relevant parts can be seen in \autoref{fig:analysis_interface}. This interface requires two modules \texttt{D} and \texttt{C} which define the domain and the context-sensitive part of the domain. After that some functions are required: 
+    \begin{itemize}
+      \item \texttt{name} to uniquely refer to an analysis.
+      \item \texttt{startstate} to define the state used when entering the analysis (similar to $\textsf{init}^{\#}$).
+      \item \textit{Transfer functions} which define the abstract effects of actions (similar to $[\![A]\!]^{\#}$)
+      \item \textit{Functions for interprocedural analysis}
+      \item \textit{Function for analysis of multithreaded programs}
+    \end{itemize}
 
+    For our taint analysis we created a new module implementing this interface.\\
+    As a \texttt{name} for \gob\ internally we chose \texttt{taintPartialContexts} because \texttt{taint} was already used, and the \texttt{name} needs to be unique.
+    \subsubsection{Domain}
+      The next step was to choose \texttt{D} and \texttt{C}. According to the concept of our analysis described in \autoref{section:formalTaint} the domain should be a set of variables. However, we are now analyzing C instead of our toy language. In C not every left-hand side of an assignment is just a simple variable, but can be one of many more complex things e.g. the memory location \texttt{*xptr} pointed to by the pointer \texttt{xptr}, the fourth place \texttt{a[3]} in an array \texttt{a}, the member \texttt{frac.n} of a struct \texttt{frac} and many more. In \gob\ there is a concept incorporating all of them called \ac{lval}. To be as precise as possible we will use a set of \ac{lval}s instead of a set of variables.\\
+      Another point worth mentioning is that we sometimes need the notion of "all variables" (or rather "all \ac{lval}s") when we want to express that everything is tainted. While conceptually using the set $X$ poses no issue, in a concrete implementation this is extremely unpractical and not even realizable if the set is infinitely large. For this case \gob\ provides a parametrized domain \texttt{ToppedSet(Base)}. This domain is either a set of elements of the \texttt{Base} type or alternatively a \texttt{Top} element which can be interpreted as the "full set of all \texttt{Base} elements". Therefore, we finally have \texttt{D = ToppedSet(Lval)} for our domain. Note that this also defines the ordering on the domain to be the regular subset ordering.\\
+      It remains to define the module \texttt{C}: We noted in \autoref{section:formalTaint} that our analysis is inherently context insensitive. Therefore, the context-sensitive part of our analysis \texttt{C} empty, which is expressed with the \texttt{Unit} domain provided by goblint.
 
-    As a domain we chose not a set of variables, but a set of lvalues, where an lvalue can be any left hand side of an assignment instruction. Examples of lvalues are: the variable $x$, the memory location $*xptr$ pointed to by the pointer $xptr$, the third place $a[3]$ in an array $a$, the member $frac.n$ of a struct $frac$ and many more. This allows us to find that only a part of an array or structure is tainted, so we can keep most of these and only update the tainted lvalues.\\
-    - topped set necessary ("full set of lvalues" not possible/impractical)\\
+    %TODO lval defined not in Goblint but in C
+
+    \subsubsection{Transfer functions}
+
     However analyzing the full language C instead of our toy language, it is necessary to take care of further challenges like pointers and library or unknown functions.\\
     - \gob\ provides \textsf{MayPointTo}()\\
     - \gob\ provides library descriptors -> unknown = top\\
@@ -75,6 +89,13 @@
     - relation analysis (apron) benefited in a similar way\\
     - mention varEq and condVars for completion??\\
 
+  
+    \begin{figure}
+      \centering
+      \includegraphics{../figures/goblint_structure_detailed.jpg}
+      \caption{Schematic directory structure of \gob. Adapted from \parencite{apinis2014frameworks}}
+      \label{fig:gob_structure_detail}
+    \end{figure}
 
     \begin{figure}
       \centering
@@ -84,12 +105,6 @@
       %TODO: reference github for this file
     \end{figure}
 
-  
-    \begin{figure}
-      \centering
-      \includegraphics{../figures/goblint_structure_detailed.jpg}
-      \caption{Schematic directory structure of \gob. Adapted from \parencite{apinis2014frameworks}}
-      \label{fig:gob_structure_detail}
-    \end{figure}
+
 
   -- Full New Section: ThreadCreate analysis
