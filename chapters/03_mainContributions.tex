@@ -4,14 +4,15 @@
 \chapter{Combatting Precision Loss}\label{chapter:mainContributions}
   In this chapter we will describe our approach to reduce the precision loss described in \autoref{section:precisionLoss}. We will first use the syntax for flow sensitive analyses from \autoref{chapter:background} to formally define the idea. After that we explain the concrete implementation of the approach into the \gob\ analyzer.
   \section{Formal description}
+    %TODO: SOME TEXT!!!
     \subsection{Taint analysis}\label{section:formalTaint}
       The basic idea to combat the precision loss is to track for each procedure which variables have been written or have possibly been altered in some other way. This information is then used in the values-of-variables analysis when combining the abstract state from the caller with the abstract return state given by the callee at the end of the procedure.\\
       In the following we will call a variable that has been written or altered in the current procedure context "tainted". Therefore, we introduce a new taint analysis tracking which variables have been tainted within the context of the current procedure. It is worth mentioning that our notion of taintedness is related but different from other uses of this concept.\\
       \\
       Let us now formulate the syntax for our taint analysis:
       Since we want to find a collection of tainted variables per program point, a suitable domain for this analysis is the powerset of the set of variables $X$ ordered by the subset relation:
-      \[\mathbb{D}_\textsf{t} = 2^X \text{ with } \sqsupseteq_\textsf{t} = \supseteq\]
-      From that follows that we seek to compute a mapping from program points to sets of variables i.e. $\eta_\textsf{t}: N \rightarrow \mathbb{D}_\textsf{t}$. To interpret this with the goal of our taint analysis in mind, we note that $\eta_\textsf{t} [n] = T$ will denote that $T$ is the set of possibly tainted variables at program point $[n]$. Expressed differently this means that for any variable $x \in T$ we cannot exclude that this variable was altered between the start of the procedure $[n]$ is in up until the program pint $[n]$.\\
+      \[\mathbb{D}_\textsf{t} = 2^X \text{ with } \sqsubseteq_\textsf{t} = \subseteq\]
+      From that follows that we seek to compute a mapping from program points to sets of variables, i.e., $\eta_\textsf{t}: N \rightarrow \mathbb{D}_\textsf{t}$. To interpret this with the goal of our taint analysis in mind, we note that $\eta_\textsf{t} [n] = T$ will denote that $T$ is the set of possibly tainted variables at program point $[n]$. Expressed differently this means that for any variable $x \in T$ we cannot exclude that this variable was altered between the start of the procedure $[n]$ is in up until the program point $[n]$.\\
       It remains to define $\textsf{init}^{\#}_\textsf{t}$, $\textsf{enter}^{\#}_\textsf{t}$ and $\textsf{combine}^{\#}_\textsf{t}$ as well as the abstract effects of actions $[\![  A ]\!]^{\#}$. Recall that the notion of a "tainted" variable is defined in relation to the current procedure. This means we want to start fresh whenever we enter a procedure and start without any variable being initially tainted. Since the same holds for the initial state we have 
       \[\textsf{enter}^{\#}_\textsf{t}\ T = \textsf{init}^{\#}_\textsf{t} = \emptyset\]
       It is worth pointing out here that the function $\textsf{enter}^{\#}_\textsf{t} T$ is always equal to the empty set irregardless of its argument $T$. Therefore, it computes the same function context for each call of a certain procedure making our taint analysis inherently context insensitive.\\
@@ -41,7 +42,7 @@
     \[\exists \text{ Edge }(u, f();, v),\ x \in Globals: x \notin \eta_\textsf{t}\ [e_f] \land (\eta_\textsf{v}\ [e_f]\ x\subset \eta_\textsf{v}\ [u]\ x)\]
     From $x \notin \eta_\textsf{t}\ [e_f]$ we know that $x$ has not been altered in the procedure $f()$ since the node $[s_f]$, and therefore it holds that 
     \[\eta_\textsf{v}\ [e_f]\ x = \eta_\textsf{v}\ [s_f]\ x\]
-    By the definitions of $\sqsupseteq_\textsf{v}$ and $\textsf{enter}^{\#}_\textsf{v}$ we get: 
+    By the definitions of $\sqsubseteq_\textsf{v}$ and $\textsf{enter}^{\#}_\textsf{v}$ we get: 
     \[\eta_\textsf{v}\ [s_f]\ x \supseteq (\textsf{enter}^{\#}_\textsf{v}\ (\eta_\textsf{v}\ [u]))\ x = \eta_\textsf{v}\ [u]\ x\]
     Therefore, $\eta_\textsf{v}\ [e_f]\ x\supseteq \eta_\textsf{v}\ [u]\ x$ which is a contradiction to the proposed case which we can therefore exclude.
 
