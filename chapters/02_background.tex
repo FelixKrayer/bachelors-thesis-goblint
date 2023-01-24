@@ -69,25 +69,84 @@
     It is worth mentioning at this point that even though a procedure can be called from multiple points within the program we still only analyze the procedure once. For $n$ procedure calls $(u_n, f();, v_n)$ we get $n$ constraints for $[s_f]$: $\eta\ [s_f] \sqsupseteq \textsf{enter}^{\#}\ (\eta\ [u_n])$. We can express this differently in a single constraint as follows:
     \[ \bigsqcup \{ \textsf{enter}^{\#}\ (\eta\ [u_n]) | \forall [u_n] \}\]
     where $\bigsqcup$ is the least upper bound, i.e., the least $d \in \mathbb{D}$ according to the ordering $\sqsubseteq$ that is ordered above all of its argument elements.\\
-    This behavior of only analyzing the procedures once with the least upper bound of all calling contexts is what we call "context insensitivity". It is quite efficient but at the same time not very precise.\\ 
     \\
-    For our values-of-variables analysis we will show how $\textsf{enter}^{\#}_\textsf{v}$ and $\textsf{combine}^{\#}_\textsf{v}$ are defined. We need to take global variables into account when computing the calling context and combining after the call. Therefore, we define the two functions as follows:
+    For our values-of-variables analysis we will show how $\textsf{enter}^{\#}_\textsf{v}$ and $\textsf{combine}^{\#}_\textsf{v}$ are defined. We need to take global variables into account when computing the start state and combining after the call. Therefore, we define the two functions as follows:
     \[\textsf{enter}^{\#}_\textsf{v}\ M = M|_{Globals} \oplus \{x \mapsto \mathbb{N} | \forall x \in X\}|_{Locals_\textsf{ce}} \]
     \[\textsf{combine}^{\#}_\textsf{v}\ (M_\textsf{cr}, M_\textsf{ce}) = M_\textsf{cr}|_{Locals_\textsf{cr}} \oplus M_\textsf{ce}|_{Globals} \]
     where $M|_{Locals}$ and $M|_{Globals}$ refers to the mapping $M$ restricted to only the local or global variables respectively. Note that $Locals_\textsf{ce}$ refers to the locals of the callee while $Locals_\textsf{cr}$ refers to the locals of the caller.\\
     To explain these two function let us first look at $\textsf{enter}^{\#}_\textsf{v}$. This function takes the part of the mapping from the caller that contains information about global variables and adds the information of uninitialized local variables used in the procedure to the state. For $\textsf{combine}^{\#}_\textsf{v}$ the local part from the callee is kept, but it is updated with the global part of the callee return state as this contains the updated information about global variables after the procedure call.\\
 
     \subsection{Context sensitivity}
-    //\textbf{WIP:}\\
-    The context insensitive approach in the previous chapter is not very precise.\\
-    - example: procedure that simply increments a global variable $a$ by one, called with different values for $a$
+    In the previous chapter we approached the analysis of procedures by analyzing them only once with an abstract start state describing all possible concrete states the procedure could start with. We call this behavior "context insensitive" as the procedure is analyzed without differentiating between different contexts it is called in.\\
+    This is not very precise as we will exemplify by applying the values-of-variables analysis to the program in \autoref{fig:example_ctx_sens}. We ignore the marked lines of the program for now.\\
+    The procedure \texttt{incr();} is called twice: Once with $a = 1$ in \autoref{code:incr1} and once with $a = -3$ in \autoref{code:incr2}. This leads to two constraints for node $[s_{incr}]$: 
+      \[\eta_\textsf{v}\ [s_{incr}] \sqsupseteq_\textsf{v} \textsf{enter}^{\#}_\textsf{v}\ \eta_\textsf{v}\ [v_2] = \{a \rightarrow \{1\} \} \]
+      \[\eta_\textsf{v}\ [s_{incr}] \sqsupseteq_\textsf{v} \textsf{enter}^{\#}_\textsf{v}\ \eta_\textsf{v}\ [v_5] = \{a \rightarrow \{-3\} \} \]
+    leading to $\eta_\textsf{v}\ [s_{incr}] = \{a \rightarrow \{-3, 1\}\}$. At the end point of the call the state will be $\eta_\textsf{v}\ [e_{incr}] = \{a \rightarrow \{-2, 2\}\}$, which is then combined back into the states of nodes in the main procedure for node $[v_6]$ and propagated up to the \texttt{assert(a < 0);} in \autoref{code:assert_a}. The result of this assertion cannot be determined by the analysis even though it is easy for humans to see that it should hold.\\
+    \\
+    This could have been avoided, if the procedure was analyzed twice, once with each starting state. To achieve this we will need to perform some modifications on our current approach: Instead of searching a mapping $\eta: N \rightarrow \mathbb{D}$ we from now on seek $\eta: (N \times \mathbb{D}) \rightarrow \mathbb{D}$. This allows us to have different states for the same program point. We call the second part of $N \times \mathbb{D}$ "context". For now this context will be the same as the starting state of the current procedure. Therefore, we need to adjust the notion of $\textsf{enter}^{\#}$ and $\textsf{combine}^{\#}$:
+    \[\eta\ [s_f, \textsf{enter}^{\#}\ (\eta\ [u, d])] \sqsupseteq \textsf{enter}^{\#}\ (\eta\ [u, d]) \]
+    \[\eta\ [v, d] \sqsupseteq \textsf{combine}^{\#}\ ((\eta\ [u, d]), (\eta\ [e_f, \textsf{enter}^{\#}\ (\eta\ [u, d])])) \]
+    The main program will always be analyzed just once as in our toy language it is only called initially. The context for its nodes can be chosen arbitrarily, e.g., the one $\textsf{init}^{\#}$ provides: $[s, \textsf{init}^{\#}]$.\\
+    \\
+    There are no changes we need to perform on the values-of-variables analysis to make it context-sensitive. Solely the changes to the general analysis framework above suffice.\\ Applying this analysis to the example in \autoref{fig:example_ctx_sens} would lead to the procedure \texttt{incr()} being analyzed twice with different contexts, assuming we still ignore the marked lines. This leads to the following two entry constraints for different unknowns of the constraint system:
+    \[\eta_\textsf{v}\ [s_{incr}, \{a \rightarrow \{1\} \}] \sqsupseteq_\textsf{v} \{a \rightarrow \{1\} \} \]
+    \[\eta_\textsf{v}\ [s_{incr}, \{a \rightarrow \{-3\} \}] \sqsupseteq_\textsf{v} \{a \rightarrow \{-3\} \} \]
+    For node $[v_6]$ only the state $\eta_\textsf{v}\ [e_{incr}, \{a \rightarrow \{-3\} \}] = \{a \rightarrow \{-2\}\}$ is combined into the caller state before the call. With this information we can safely say that the assertion in the following \autoref{code:assert_a} will hold.
 
     \subsection{Partial context sensitivity}
+    While the context-sensitive approach from the previous section might be very precise, it can be quite costly in terms of computation time. To reach a middle ground between a context insensitive and a fully context-sensitive analysis, one could propose an approach where only a part of the domain $\mathbb{D}$ is used as a context to differentiate function calls.\\
+    Let $\mathbb{D} = \mathbb{D}_\textsf{ctx} \times \mathbb{D}_\textsf{rem}$. The domain is now a product of one part used for contexts $\mathbb{D}_\textsf{ctx}$ and the remaining part $\mathbb{D}_\textsf{rem}$.\\ 
+    Again we need to change the definition of the mapping we want to compute: It now is $\eta: (N \times \mathbb{D}_\textsf{ctx}) \rightarrow \mathbb{D}$. Additionally, $\textsf{enter}^{\#}$ and $\textsf{combine}^{\#}$ are changed as follows:
+    \[\eta\ [s_f, \langle \textsf{enter}^{\#}\ (\eta\ [u, c]) \rangle_1] \sqsupseteq \textsf{enter}^{\#}\ (\eta\ [u, c]) \]
+    \[\eta\ [v, c] \sqsupseteq \textsf{combine}^{\#}\ ((\eta\ [u, d]), (\eta\ [e_f, \langle \textsf{enter}^{\#}\ (\eta\ [u, c]) \rangle_1 ])) \]
+    where $\langle d \rangle_1$ extracts the first part of a tuple $d \in (\mathbb{D}_\textsf{ctx} \times \mathbb{D}_\textsf{rem})$.\\
+    With this formal model we have the option to perform an analysis completely context sensitively ($\mathbb{D} = \mathbb{D}_\textsf{ctx} \times (\bullet)$), completely context insensitively ($\mathbb{D} = (\bullet) \times \mathbb{D}_\textsf{rem}$) or anything in between, where $\{(\bullet)\}$ is the "unit domain" which contains exactly one element with the trivial ordering $(\bullet) \sqsubseteq (\bullet)$.
+    \\    
+    We have to note here that there are some severe issues with the approach for (partial) context-sensitive analysis described in this thesis: The resulting system of constraints may not be finite and some variables in the constraint system may depend on an infinite number of other variables. This can result in a very hard or even impossible to solve constraint system. While we will stick with this formal approach for this thesis for sake of simplicity, an escape route to this issue is described in \parencite{apinis2012side}.
 
     \subsection{Precision loss}\label{section:precisionLoss}
-    - example from above expanded with a second global variable that is not altered but experiences precision loss
-    
-  
+    Let us now again consider the example program \autoref{fig:example_ctx_sens}. This time we take the marked lines into account. When the program is analyzed context insensitively, not only will the state at the start node represent two possible values for the global variable \texttt{a}, but also for \texttt{c}. The state will therefore be 
+    \[\eta_\textsf{v}\ [s_{incr}, (\bullet)] = \{a \rightarrow \{-3, 1\}, c \rightarrow \{-10, 10\}\} \]
+    Even though the variable \texttt{c} is never changed within \texttt{incr()}, the mapping $c \rightarrow \{-10, 10\}$ is still copied into the caller state when combining the states for node $[v_5, (\bullet)]$. Therefore, the assertion in \autoref{code:assert_c} cannot be determined to hold solely with the information gained by context insensitive values-of-variables analysis. This precision loss could easily be avoided if we had some idea which global variables are definitely not changed by a procedure call.
 
-
+    \begin{figure}
+      \centering
+      \begin{subfigure}{.35\textwidth}
+        \centering
+        \lstinputlisting[escapechar=|, language=C]{../code/02-example_ctx_sens.c}
+      \end{subfigure}
+      \begin{subfigure}{.30\textwidth}
+        \centering
+        \begin{tikzpicture}[node distance={40pt}, main/.style = {draw, circle}] 
+          \node[main] (0) {$s$};
+          \node[main] (1) [below of=0] {$v_1$};
+          \node[main] (2) [below of=1] {$v_2$};
+          \node[main] (3) [below of=2] {$v_3$};
+          \node[main] (4) [below of=3] {$v_4$};
+          \node[main] (5) [below of=4] {$v_5$};
+          \node[main] (6) [below of=5] {$v_6$};
+          \node[main] (7) [below of=6] {$v_7$};
+          \node[main] (8) [below of=7] {$e$};
+          \draw[->] (0) -- node[midway, xshift=20pt, yshift=9pt, pos=1] {a = 1;} (1);
+          \draw[->] (1) -- node[midway, xshift=20pt, yshift=9pt, pos=1] {\colorbox{TUMAccentLightBlue}{c = 10;}} (2);
+          \draw[->] (2) -- node[midway, xshift=20pt, yshift=9pt, pos=1] {incr();} (3);
+          \draw[->] (3) -- node[midway, xshift=20pt, yshift=9pt, pos=1] {a = -3;} (4);
+          \draw[->] (4) -- node[midway, xshift=22pt, yshift=9pt, pos=1] {\colorbox{TUMAccentLightBlue}{c = -10;}} (5);
+          \draw[->] (5) -- node[midway, xshift=20pt, yshift=9pt, pos=1] {incr();} (6);
+          \draw[->] (6) -- node[midway, xshift=35pt, yshift=9pt, pos=1] {assert(a < 0);} (7);
+          \draw[->] (7) -- node[midway, xshift=35pt, yshift=9pt, pos=1] {\colorbox{TUMAccentLightBlue}{assert(c < 0);}} (8);
+        \end{tikzpicture}
+      \end{subfigure}
+      \begin{subfigure}{.30\textwidth}
+        \centering
+        \begin{tikzpicture}[node distance={50pt}, main/.style = {draw, circle}] 
+          \node[main] (0) {$s_{incr}$};
+          \node[main] (1) [below of=0] {$e_{incr}$};
+          \draw[->] (0) -- node[midway, xshift=28pt, yshift=11pt, pos=1] {a = a + 1;} (1);
+        \end{tikzpicture}
+      \end{subfigure}
+      \caption{Example program (left) and corresponding CFGs for \texttt{main} (middle) and \texttt{incr} (right)}
+      \label{fig:example_ctx_sens}
+    \end{figure}
 

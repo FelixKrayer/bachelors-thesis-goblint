@@ -1,4 +1,4 @@
-int main() {
+void main() {
   int x;
   x = 0;
   if (x == 0)
