@@ -6,12 +6,12 @@ sig
 
   val name : unit -> string
   val startstate : varinfo -> D.t
+  val query : (D.t, C.t) ctx -> 'a Queries.t -> 'a Queries.result
 
   (* Transfer functions *)
   val assign: (D.t, C.t) ctx -> lval -> exp -> D.t
   val vdecl : (D.t, C.t) ctx -> varinfo -> D.t
   val branch: (D.t, C.t) ctx -> exp -> bool -> D.t
-  val query : (D.t, C.t) ctx -> 'a Queries.t -> 'a Queries.result
 
   (* Functions for interprocedural analysis *)
   val special : (D.t, C.t) ctx -> lval option -> varinfo -> exp list -> D.t

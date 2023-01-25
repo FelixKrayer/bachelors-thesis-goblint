@@ -1,6 +1,8 @@
 % !TeX root = ../main.tex
 % Add the above to each chapter to make compiling the PDF easier in some editors.
 
+%TODO: Context sensitive syntax for this analysis!!! and improving vov analysis!!!
+
 \chapter{Combatting Precision Loss}\label{chapter:mainContributions}
   In this chapter we will describe our approach to reduce the precision loss described in \autoref{section:precisionLoss}. We will first use the syntax for flow sensitive analyses from \autoref{chapter:background} to formally define the idea. After that we explain the concrete implementation of the approach into the \gob\ analyzer.
   \section{Formal description}
@@ -13,9 +15,9 @@
       Since we want to find a collection of tainted variables per program point, a suitable domain for this analysis is the powerset of the set of variables $X$ ordered by the subset relation:
       \[\mathbb{D}_\textsf{t} = 2^X \text{ with } \sqsubseteq_\textsf{t} = \subseteq\]
       From that follows that we seek to compute a mapping from program points to sets of variables, i.e., $\eta_\textsf{t}: N \rightarrow \mathbb{D}_\textsf{t}$. To interpret this with the goal of our taint analysis in mind, we note that $\eta_\textsf{t} [n] = T$ will denote that $T$ is the set of possibly tainted variables at program point $[n]$. Expressed differently this means that for any variable $x \in T$ we cannot exclude that this variable was altered between the start of the procedure $[n]$ is in up until the program point $[n]$.\\
-      It remains to define $\textsf{init}^{\#}_\textsf{t}$, $\textsf{enter}^{\#}_\textsf{t}$ and $\textsf{combine}^{\#}_\textsf{t}$ as well as the abstract effects of actions $[\![  A ]\!]^{\#}$. Recall that the notion of a "tainted" variable is defined in relation to the current procedure. This means we want to start fresh whenever we enter a procedure and start without any variable being initially tainted. Since the same holds for the initial state we have 
+      It remains to define $\textsf{init}^{\#}_\textsf{t}$, $\textsf{enter}^{\#}_\textsf{t}$ and $\textsf{combine}^{\#}_\textsf{t}$ as well as the abstract effects of actions $[\![ A ]\!]^{\#}$. Recall that the notion of a "tainted" variable is defined in relation to the current procedure. This means we want to start fresh whenever we enter a procedure and start without any variable being initially tainted. Since the same holds for the initial state we have 
       \[\textsf{enter}^{\#}_\textsf{t}\ T = \textsf{init}^{\#}_\textsf{t} = \emptyset\]
-      It is worth pointing out here that the function $\textsf{enter}^{\#}_\textsf{t} T$ is always equal to the empty set irregardless of its argument $T$. Therefore, it computes the same function context for each call of a certain procedure making our taint analysis inherently context insensitive.\\
+      It is worth pointing out here that the function $\textsf{enter}^{\#}_\textsf{t}\ T$ is always equal to the empty set irregardless of its argument $T$. Therefore, it computes the same function context for each call of a certain procedure making our taint analysis inherently context insensitive.\\
       When combining the caller state with the returned callee state, we note that anything that we need to keep the tainted set from before the call, as a tainted variable can get never get "untainted" again, no matter what the procedure does. In addition to that we will add the set returned by the callee, as anything tainted in the call needs to be considered tainted in the caller as well. This is because we want to know which variables have been altered in a procedure call, no matter if the tainting happened within the procedure itself or within a procedure called by the procedure. This leaves us with the following equation for the $\textsf{combine}^{\#}_\textsf{t}$ function:
       \[ \textsf{combine}^{\#}_\textsf{t}\ (T_\textsf{cr}, T_\textsf{ce}) = T_\textsf{cr} \cup (T_\textsf{ce} \backslash Locals_\textsf{ce}) \]
       Note that we removed the callee local variables $Locals_\textsf{ce}$ because these are not accessible by the caller and all of its callers anyway, so it is not useful to keep track of them.\\
@@ -55,11 +57,12 @@
   
   For a deeper insight into the inner workings of \gob\ refer to \parencite{apinis2014frameworks}.
   
-    \subsection{Taint analysis}
+    \subsection{Taint analysis}\label{section:implTaint}
     To define an analysis the \gob\ analyzer provides an interface, where the relevant parts can be seen in \autoref{fig:analysis_interface}. This interface requires two modules \texttt{D} and \texttt{C} which define the domain and the context-sensitive part of the domain. After that some functions are required: 
     \begin{itemize}
       \item \texttt{name} to uniquely refer to an analysis.
       \item \texttt{startstate} to define the state used when entering the analysis (similar to $\textsf{init}^{\#}$).
+      \item \texttt{query} to implement the query system of \gob. This allows an analysis to broadcast information to be used in analyses.
       \item \textit{Transfer functions} which define the abstract effects of actions (similar to $[\![A]\!]^{\#}$)
       \item \textit{Functions for interprocedural analysis}
       \item \textit{Function for analysis of multithreaded programs}
@@ -68,20 +71,30 @@
     For our taint analysis we created a new module implementing this interface.\\
     As a \texttt{name} for \gob\ internally we chose \texttt{taintPartialContexts} because \texttt{taint} was already used, and the \texttt{name} needs to be unique.
     \subsubsection{Domain}
-      The next step was to choose \texttt{D} and \texttt{C}. According to the concept of our analysis described in \autoref{section:formalTaint} the domain should be a set of variables. However, we are now analyzing C instead of our toy language. In C not every left-hand side of an assignment is just a simple variable, but can be one of many more complex things e.g. the memory location \texttt{*xptr} pointed to by the pointer \texttt{xptr}, the fourth place \texttt{a[3]} in an array \texttt{a}, the member \texttt{frac.n} of a struct \texttt{frac} and many more. In \gob\ there is a concept incorporating all of them called \ac{lval}. To be as precise as possible we will use a set of \ac{lval}s instead of a set of variables.\\
-      Another point worth mentioning is that we sometimes need the notion of "all variables" (or rather "all \ac{lval}s") when we want to express that everything is tainted. While conceptually using the set $X$ poses no issue, in a concrete implementation this is extremely unpractical and not even realizable if the set is infinitely large. For this case \gob\ provides a parametrized domain \texttt{ToppedSet(Base)}. This domain is either a set of elements of the \texttt{Base} type or alternatively a \texttt{Top} element which can be interpreted as the "full set of all \texttt{Base} elements". Therefore, we finally have \texttt{D = ToppedSet(Lval)} for our domain. Note that this also defines the ordering on the domain to be the regular subset ordering.\\
-      It remains to define the module \texttt{C}: We noted in \autoref{section:formalTaint} that our analysis is inherently context insensitive. Therefore, the context-sensitive part of our analysis \texttt{C} empty, which is expressed with the \texttt{Unit} domain provided by goblint.
-
-    %TODO lval defined not in Goblint but in C
+      The next step was to choose \texttt{D} and \texttt{C}. According to the concept of our analysis described in \autoref{section:formalTaint} the domain should be a set of variables. However, we are now analyzing C instead of our toy language. In C not every left-hand side of an assignment is just a simple variable, but can be one of many more complex things e.g. the memory location \texttt{*xptr} pointed to by the pointer \texttt{xptr}, the fourth place \texttt{a[3]} in an array \texttt{a}, the member \texttt{frac.n} of a struct \texttt{frac} and many more. This concept is called \ac{lval} and there is an implementation of this type provided by \gob. To be as precise as possible we will use a set of \ac{lval}s instead of a set of variables for the implementation of the taint analysis.\\
+      Another point worth mentioning is that we sometimes need the notion of "all variables" (or rather "all \ac{lval}s") when we want to express that everything is tainted. While conceptually using the set $X$ poses no issue, in a concrete implementation this is extremely unpractical and not even realizable if the set is infinitely large. For this case \gob\ provides a parametrized domain \texttt{ToppedSet(Base)}. This domain is either a set of elements of the \texttt{Base} type or alternatively a \texttt{Top} element which can be interpreted as the "full set of all \texttt{Base} elements". Therefore, we finally have \texttt{D = ToppedSet(Lval.CilLval)} for our domain, where \texttt{Lval.CilLval} is \gob's implementation of \ac{lval}. Note that this also defines the ordering on the domain to be the regular subset ordering.\\
+      It remains to define the module \texttt{C}: We noted in \autoref{section:formalTaint} that our analysis is inherently context insensitive. Therefore, the context-sensitive part of our analysis \texttt{C} empty, which is expressed with the \texttt{Unit} domain provided by \gob.
 
     \subsubsection{Transfer functions}
+      These implement the effect of actions on the state, similar to the abstract effects of actions $[\![A]\!]^{\#}$ in \autoref{chapter:background}. Variable declarations are handled by \texttt{vdecl} while \texttt{branch} handles checks for if-statements and loops. For these two actions our analysis just propagates the state from before, so the two mentioned functions use the default implementation from the \texttt{Analysis.IdentitySpec} of \gob.\\
+      Much more interesting is the case of the \texttt{assign} function which handles the effect of an assignment to an \ac{lval}. For this case we want to add the \ac{lval} to our tainted set. The parameters for the \texttt{assign} function are: \texttt{ctx} which amongst other things contains the state from before, the \ac{lval} to which a value is assigned and an expression that evaluates to the value that is assigned. We are only interested in \texttt{ctx} and the \ac{lval} as to us, only the fact that a value is assigned is relevant and not its value.\\
+      Tainting \ac{lval}s is not as straightforward as it might seem at first. Just adding it to the state from before, i.e., the tainted set, only suffices if the \ac{lval} is a specific location in the memory, e.g., a specific (local or global) variable. The \ac{lval} could however also be a reference to a location in the memory, e.g., a pointer. For these it is not helpful to just taint the reference because we need to know the specific memory locations that are or could be tainted. To solve this issue we make use of \gob's \texttt{MayPointTo} query. This takes a reference to the memory and asks all other activated analyses if they have any information about where this reference may point to. Just like everything else in the static analyzer \gob, the answer is an overapproximation, so we can be sure not to miss any location that could be referenced.\\
+      In conclusion, tainting an \ac{lval} goes as follows: If the \ac{lval} is a specific memory location, add this \ac{lval} to the tainted set. If it is a reference to the memory described by some expression, send a \texttt{MayPointTo} query to ask other analyses which memory locations this expression may point to and add the returned set of \ac{lval}s to the tainted set. We implemented this functionality in a helper function \texttt{taint\_lval}. Therefore, calling this function is the only thing the \texttt{assign} function needs to do as seen in \autoref{fig:assign}.
 
-    However analyzing the full language C instead of our toy language, it is necessary to take care of further challenges like pointers and library or unknown functions.\\
-    - \gob\ provides \textsf{MayPointTo}()\\
-    - \gob\ provides library descriptors -> unknown = top\\
+    \subsubsection{Functions for interprocedural analysis}
+    % TODO interprocedural functions
+
+    \subsubsection{Function for analysis of multithreaded programs}
+    % TODO multithreaded functions
+
+    \subsubsection{The \texttt{query} function}
+      We wanted to enable our taint analysis to tell other analyses which \ac{lval}s are tainted at a specific program point. Therefore, we added a new query \texttt{MayBeTainted} to the query system of \gob. The result of this query should be a set containing \ac{lval}s which may be tainted, i.e., any \ac{lval} not in the returned set is not tainted.\\
+      After this addition we were able to make our \texttt{taintPartialContexts} analysis answer this query. Therefore, our analysis implements the \texttt{query} function in such a way that it answers only \texttt{MayBeTainted} queries with the current state but does not answer other queries.
 
     \subsection{Benefiting other analyses}
-    - main part: base Analysis:
+    In this section we will discuss how we improved other existing analyses in \gob\ using the taint analysis we implemented in \autoref{section:implTaint}. The main analysis that benefited from these changes is the \texttt{base} analysis of the analyzer. This analysis implements a very much extended approach of the basic values-of-variables analysis we formally defined in \autoref{chapter:background}. The \texttt{base} analysis is however still based on the main goal and basic concept of finding a mapping from program variables to possible values at each program point.
+
+
     \begin{itemize}
       \item mappings of lvalues new to the caller are taken from callee e.g. newly allocated memory on callee
       \item mappings not in callee state but are in caller context need to be removed -> in multithreaded programs, if in the caller a mutex was held but unlocked by the callee
@@ -103,6 +116,14 @@
       \lstinputlisting[language={[Objective]Caml}]{../code/analyses.ml}
       \caption{Simplified Interface for implementing analyses in \gob}
       \label{fig:analysis_interface}
+      %TODO: reference github for this file
+    \end{figure}
+
+    \begin{figure}
+      \centering
+      \lstinputlisting[language={[Objective]Caml}]{../code/assign.ml}
+      \caption{Implementation of the helper \texttt{taint\_lval} and the \texttt{assign} function}
+      \label{fig:assign}
       %TODO: reference github for this file
     \end{figure}
 
