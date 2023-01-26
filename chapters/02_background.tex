@@ -67,7 +67,7 @@
     \[\eta\ [v] \sqsupseteq  \textsf{combine}^{\#}\ ((\eta\ [u]), (\eta\ [e_f])) \]
     where $[s_f]$ and $[e_f]$ are the start and end node of the \ac{CFG} for procedure $f()$. The functions $\textsf{combine}^{\#}: \mathbb{D} \times \mathbb{D} \rightarrow \mathbb{D}$ and $\textsf{enter}^{\#}: \mathbb{D} \rightarrow \mathbb{D}$ are defined by the analysis. $\textsf{enter}^{\#}$ handles computing the start state for the procedure $f()$, while $\textsf{combine}^{\#}$ describes in what way the caller state and the end state of the callee are merged after the call.\\
     It is worth mentioning at this point that even though a procedure can be called from multiple points within the program we still only analyze the procedure once. For $n$ procedure calls $(u_n, f();, v_n)$ we get $n$ constraints for $[s_f]$: $\eta\ [s_f] \sqsupseteq \textsf{enter}^{\#}\ (\eta\ [u_n])$. We can express this differently in a single constraint as follows:
-    \[ \bigsqcup \{ \textsf{enter}^{\#}\ (\eta\ [u_n]) | \forall [u_n] \}\]
+    \[\eta\ [s_f] \sqsupseteq \bigsqcup \{ d \exists (u_n, f();, v_n) \in Edges:\ \textsf{enter}^{\#}\ (\eta\ [u_n]) = d \}\]
     where $\bigsqcup$ is the least upper bound, i.e., the least $d \in \mathbb{D}$ according to the ordering $\sqsubseteq$ that is ordered above all of its argument elements.\\
     \\
     For our values-of-variables analysis we will show how $\textsf{enter}^{\#}_\textsf{v}$ and $\textsf{combine}^{\#}_\textsf{v}$ are defined. We need to take global variables into account when computing the start state and combining after the call. Therefore, we define the two functions as follows:
@@ -100,12 +100,15 @@
     Again we need to change the definition of the mapping we want to compute: It now is $\eta: (N \times \mathbb{D}_\textsf{ctx}) \rightarrow \mathbb{D}$. Additionally, $\textsf{enter}^{\#}$ and $\textsf{combine}^{\#}$ are changed as follows:
     \[\eta\ [s_f, \langle \textsf{enter}^{\#}\ (\eta\ [u, c]) \rangle_1] \sqsupseteq \textsf{enter}^{\#}\ (\eta\ [u, c]) \]
     \[\eta\ [v, c] \sqsupseteq \textsf{combine}^{\#}\ ((\eta\ [u, d]), (\eta\ [e_f, \langle \textsf{enter}^{\#}\ (\eta\ [u, c]) \rangle_1 ])) \]
-    where $\langle d \rangle_1$ extracts the first part of a tuple $d \in (\mathbb{D}_\textsf{ctx} \times \mathbb{D}_\textsf{rem})$.\\
+    where $\langle d \rangle_1$ extracts the first part of a tuple $d \in (\mathbb{D}_\textsf{ctx} \times \mathbb{D}_\textsf{rem})$. This formalization results in multiple constraint for a single starting variable with context $[s_f, c]$. This can alternatively be formulated as 
+    \[\eta\ [s_f, c] \sqsupseteq \bigsqcup \{ (c, d) | \exists (u_n, f();, v_n) \in Edges:\ \textsf{enter}^{\#}\ (\eta\ [u_n, c_n]) = (c, d) \} \]
     With this formal model we have the option to perform an analysis completely context sensitively ($\mathbb{D} = \mathbb{D}_\textsf{ctx} \times (\bullet)$), completely context insensitively ($\mathbb{D} = (\bullet) \times \mathbb{D}_\textsf{rem}$) or anything in between, where $\{(\bullet)\}$ is the "unit domain" which contains exactly one element with the trivial ordering $(\bullet) \sqsubseteq (\bullet)$.
-    \\    
-    We have to note here that there are some severe issues with the approach for (partial) context-sensitive analysis described in this thesis: The resulting system of constraints may not be finite and some variables in the constraint system may depend on an infinite number of other variables. This can result in a very hard or even impossible to solve constraint system. While we will stick with this formal approach for this thesis for sake of simplicity, an escape route to this issue is described in \parencite{apinis2012side}.
+    \\
+    We have to note here that there are some severe issues with the approach for (partial) context-sensitive analysis described in this thesis: The resulting system of constraints may not be finite and some variables in the constraint system may depend on an infinite number of other variables. This can result in a very hard or even impossible to solve constraint system. While we will stick with this formal approach for this thesis for the sake of simplicity, an escape route to this issue is described in \parencite{apinis2012side}.
 
     \subsection{Precision loss}\label{section:precisionLoss}
+    The main source of the precision loss of context-insensitive or partially context-sensitive analysis is the join over all states with the same context. 
+
     Let us now again consider the example program \autoref{fig:example_ctx_sens}. This time we take the marked lines into account. When the program is analyzed context insensitively, not only will the state at the start node represent two possible values for the global variable \texttt{a}, but also for \texttt{c}. The state will therefore be 
     \[\eta_\textsf{v}\ [s_{incr}, (\bullet)] = \{a \rightarrow \{-3, 1\}, c \rightarrow \{-10, 10\}\} \]
     Even though the variable \texttt{c} is never changed within \texttt{incr()}, the mapping $c \rightarrow \{-10, 10\}$ is still copied into the caller state when combining the states for node $[v_5, (\bullet)]$. Therefore, the assertion in \autoref{code:assert_c} cannot be determined to hold solely with the information gained by context insensitive values-of-variables analysis. This precision loss could easily be avoided if we had some idea which global variables are definitely not changed by a procedure call.
