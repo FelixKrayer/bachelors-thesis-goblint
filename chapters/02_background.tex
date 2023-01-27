@@ -28,12 +28,12 @@
 \end{figure}
 
   \section{Static Analysis}
-  Static analysis is defined by Rival~\parencite{rival2020introduction} as "[...]an automatic technique that approximates in a conservative manner semantic properties of programs before their execution". This means that the program is analyzed just by the given source code without execution. The goal is to prove certain properties about the program in a "sound" manner, i.e., any property that is proven to hold actually does hold. However, from failing to prove a property one cannot conclude that the given property does not hold.\\
-  In order to prove properties, e.g. finding that a program does not contain races or identifying dead code, we need to gain information about the program. This is done by performing various kinds of analyses. We will focus on flow sensitive analyses from now on, i.e., analyses which find properties of the program dependent on the location within it. We will introduce a syntax to formalize flow sensitive analyses in the following sections. This formalization approach is heavily based on \parencite{apinis2012side}.
+    Static analysis is defined by Rival~\parencite{rival2020introduction} as "[...]an automatic technique that approximates in a conservative manner semantic properties of programs before their execution". This means that the program is analyzed just by the given source code without execution. The goal is to prove certain properties about the program in a "sound" manner, i.e., any property that is proven to hold actually does hold. However, from failing to prove a property one cannot conclude that the given property does not hold.\\
+    In order to prove properties, e.g. finding that a program does not contain races or identifying dead code, we need to gain information about the program. This is done by performing various kinds of analyses. We will focus on flow sensitive analyses from now on, i.e., analyses which find properties of the program dependent on the location within it. We will introduce a syntax to formalize flow sensitive analyses in the following sections. This formalization approach is heavily based on \parencite{apinis2012side}.
     
     // TODO: talk about Abstract Interpretation.
   
-    \subsection{Flow sensitive analysis}
+  \section{Flow sensitive analysis}
     As noted above flow sensitive analyses find properties of the program dependent on the point within the program. Expressed differently this means a flow sensitive analysis will find an overapproximation of states the program may be in for any given point within the program or "program point". This state can describe many things dependent on the analysis performed.\\
     First let us define what a program point is: Consider a \ac{CFG}, where nodes represent points between instructions within the program. Edges are labeled with instructions or checks (from now on collectively called "actions") and describe the transitions between these points (see example \autoref{fig:example_cfg}). Then any node on this \ac{CFG} would be what we call a program point.\\
     Concretely let $N$ be the set of all program points. Furthermore, let $\mathbb{D}$ be a Domain containing abstract states describing concrete states of the program. This means that some $d \in \mathbb{D}$ can describe many states the program can be in.\\ 
@@ -44,7 +44,7 @@
     In the scope of this thesis we will focus on abstracting integer values by sets of integers. Thereby the goal of our values-of-variables analysis is to find a mapping $X \rightarrow 2^\mathbb{N}$ for each program point.\\
     Combining this with the considerations from above, we get that the Domain $\mathbb{D}_\textsf{v}$ for the values-of-variables analysis should be $\mathbb{D}_\textsf{v} = X \rightarrow 2^\mathbb{N}$. Finally, the resulting $\eta_\textsf{v}: N \rightarrow \mathbb{D}_\textsf{v}$ for this analysis describes a mapping $\eta_\textsf{v}\ [n]$ for some program point $[n] \in N$, where $\eta_\textsf{v}\ [n]\ x$ is a set containing all values $x \in X$ may possibly hold at $[n]$. From this we can conclude that $x$ cannot hold any value outside $\eta_\textsf{v}\ [n]\ x$ at program point $[n]$.
 
-    \subsection{Constraint systems}
+  \section{Constraint systems}
     We now formulate a way in which we can describe an analysis in the form of constraints. For this we need a partial ordering $\sqsubseteq$ on the domain $\mathbb{D}$.\\
     Then we create a system of constraints which can be solved for a solution. Consider the edges $(u, A, v)$ of the \ac{CFG}, where each edge denotes a transition from program point $[u]$ to program point $[v]$ via the action $A$. Now let each of these edges give rise to a constraint
     \[\eta\ [v] \sqsupseteq [\![A]\!]^{\#}\ (\eta\ [u])\]
@@ -59,7 +59,7 @@
     where $M \oplus \{x \mapsto s\}$ denotes that the mapping $M$ is updated such that $x$ will be mapped to the set $s$. A full definition of abstract effects of a values-of-variables analysis can be found at <// TODO >.\\
     % TODO: ref something for full description? Appendix?
 
-    \subsection{Interprocedural analysis}
+  \section{Interprocedural analysis}
     So far we only have defined how a program without procedure calls is analyzed. Now we want to introduce procedure calls of the form $f()$. For simplicity, we will only consider argumentless procedure calls without a return value. Arguments and return values can be simulated by using global variables.\\
     Since a call has its own set of local variables to work with and a call stack can contain multiple of the same procedure (e.g. for recursion), we will analyze procedures in their own environment. However, we need to consider global variables and how the procedure affects these.\\
     The idea is to give procedures their own starting states and analyze them similarly as we have done before. The final state of the called procedure is then used to be combined back into the state of the caller before the call. Formalized for an edge $(u, f();, v)$ this looks as follows:
@@ -76,7 +76,7 @@
     where $M|_{Locals}$ and $M|_{Globals}$ refers to the mapping $M$ restricted to only the local or global variables respectively. Note that $Locals_\textsf{ce}$ refers to the locals of the callee while $Locals_\textsf{cr}$ refers to the locals of the caller.\\
     To explain these two function let us first look at $\textsf{enter}^{\#}_\textsf{v}$. This function takes the part of the mapping from the caller that contains information about global variables and adds the information of uninitialized local variables used in the procedure to the state. For $\textsf{combine}^{\#}_\textsf{v}$ the local part from the callee is kept, but it is updated with the global part of the callee return state as this contains the updated information about global variables after the procedure call.\\
 
-    \subsection{Context sensitivity}
+  \section{Context sensitivity}
     In the previous chapter we approached the analysis of procedures by analyzing them only once with an abstract start state describing all possible concrete states the procedure could start with. We call this behavior "context insensitive" as the procedure is analyzed without differentiating between different contexts it is called in.\\
     This is not very precise as we will exemplify by applying the values-of-variables analysis to the program in \autoref{fig:example_ctx_sens}. We ignore the marked lines of the program for now.\\
     The procedure \texttt{incr();} is called twice: Once with $a = 1$ in \autoref{code:incr1} and once with $a = -3$ in \autoref{code:incr2}. This leads to two constraints for node $[s_{incr}]$: 
@@ -94,27 +94,28 @@
     \[\eta_\textsf{v}\ [s_{incr}, \{a \rightarrow \{-3\} \}] \sqsupseteq_\textsf{v} \{a \rightarrow \{-3\} \} \]
     For node $[v_6]$ only the state $\eta_\textsf{v}\ [e_{incr}, \{a \rightarrow \{-3\} \}] = \{a \rightarrow \{-2\}\}$ is combined into the caller state before the call. With this information we can safely say that the assertion in the following \autoref{code:assert_a} will hold.
 
-    \subsection{Partial context sensitivity}
-    While the context-sensitive approach from the previous section might be very precise, it can be quite costly in terms of computation time. To reach a middle ground between a context insensitive and a fully context-sensitive analysis, one could propose an approach where only a part of the domain $\mathbb{D}$ is used as a context to differentiate function calls.\\
-    Let $\mathbb{D} = \mathbb{D}_\textsf{ctx} \times \mathbb{D}_\textsf{rem}$. The domain is now a product of one part used for contexts $\mathbb{D}_\textsf{ctx}$ and the remaining part $\mathbb{D}_\textsf{rem}$.\\ 
-    Again we need to change the definition of the mapping we want to compute: We now have $\eta: (N \times \mathbb{D}_\textsf{ctx}) \rightarrow \mathbb{D}$. Additionally, $\textsf{enter}^{\#}$ and $\textsf{combine}^{\#}$ are changed as follows:
-    \[\eta\ [s_f, \langle \textsf{enter}^{\#}\ (\eta\ [u, c]) \rangle_1] \sqsupseteq \textsf{enter}^{\#}\ (\eta\ [u, c]) \]
-    \[\eta\ [v, c] \sqsupseteq \textsf{combine}^{\#}\ ((\eta\ [u, c]), (\eta\ [e_f, \langle \textsf{enter}^{\#}\ (\eta\ [u, c]) \rangle_1 ])) \]
-    where $\langle d \rangle_1$ extracts the first part of a tuple $d \in (\mathbb{D}_\textsf{ctx} \times \mathbb{D}_\textsf{rem})$. This formalization results in multiple constraint for a single starting variable with context $[s_f, c]$. We can alternatively formulate this as
-    \[\eta\ [s_f, c] \sqsupseteq \bigsqcup \{ (c, d) | \exists (u_n, f();, v_n) \in Edges:\ \textsf{enter}^{\#}\ (\eta\ [u_n, c_n]) = (c, d) \} \]
-    i.e., the constraint for the variable $[s_f, c]$ is the least upper bound of all entry states $(c, d)$ for some call of $f$, which have the same context $c$ as the variable. Or expressed differently, all states $(c, d)$ computed by $\textsf{enter}^{\#}$ for $f$ are grouped by the context $c$, where each group is joined by $\bigsqcup$ to produce a constraint for a starting variable $[s_f, c]$ with the respective context.\\ 
-    With this formal model we have the option to perform an analysis completely context sensitively ($\mathbb{D} = \mathbb{D}_\textsf{ctx} \times (\bullet)$), completely context insensitively ($\mathbb{D} = (\bullet) \times \mathbb{D}_\textsf{rem}$) or anything in between, where $\{(\bullet)\}$ is the "unit domain" which contains exactly one element with the trivial ordering $(\bullet) \sqsubseteq (\bullet)$.
+  \section{Partial context sensitivity}\label{section:partialCtxSens}
+    While the context-sensitive approach from the previous section might be very precise, it can be quite costly in terms of computation time. To reach a middle ground between a context insensitive and a fully context-sensitive analysis, we define an approach where contexts are different from the entry state of the call. With this we can group contexts to analyze a procedure multiple times, however not once per entry state, but once per group of entry states.
+    Let $\mathbb{C}$ be our context-domain. Instead of adding a state from the value-domain $\mathbb{D}$ to the program points $N$ we add an element from the context-domain. Thereby we change the definition of the mapping we want to compute as follows: We now have $\eta: (N \times \mathbb{C}) \rightarrow \mathbb{D}$.\\
+    We now also define a new function $\textsf{context}^{\#}: \mathbb{D} \rightarrow \mathbb{C}$. This function will calculate the context when entering a procedure. Additionally, $\textsf{enter}^{\#}$ and $\textsf{combine}^{\#}$ are changed as follows:
+    \[\eta\ [s_f, \textsf{context}^{\#}\ (\eta\ [u, c])] \sqsupseteq \textsf{enter}^{\#}\ (\eta\ [u, c]) \]
+    \[\eta\ [v, c] \sqsupseteq \textsf{combine}^{\#}\ ((\eta\ [u, c]), (\eta\ [e_f, \textsf{context}^{\#}\ (\eta\ [u, c])])) \]
+    for an edge $(u, f();, v)$.\\
+    This formalization results in multiple constraint for a single starting variable with context $[s_f, c]$. We can alternatively formulate this as
+    \[\eta\ [s_f, c] \sqsupseteq \bigsqcup \{\textsf{enter}^{\#}\ (\eta\ [u_n, c_n]) | \exists (u_n, f();, v_n) \in Edges:\ \textsf{context}^{\#}\ (\eta\ [u_n, c_n]) = c \} \]
+    i.e., the constraint for the variable $[s_f, c]$ is the least upper bound of all entry states for some call of $f$, which have the same context $c$ as the constraint variable. Or expressed differently, all states computed by $\textsf{enter}^{\#}\ d$ for $f$ are grouped by the context $c$, where each group is joined by $\bigsqcup$ to produce a constraint for a starting variable $[s_f, c]$ with the respective context.\\ 
+    With this formal model we have the option to perform an analysis completely context sensitively ($\mathbb{C} = \mathbb{D}$ and $\textsf{context}^{\#} = \textsf{enter}^{\#}$), completely context insensitively ($\mathbb{C} = \{\bullet\}$) or anything in between, where $\{\bullet\}$ is the "unit domain" which contains exactly one element with the trivial ordering $\bullet \sqsubseteq \bullet$.
     \\
     We have to note here that there are some severe issues with the approach for (partial) context-sensitive analysis described in this thesis: The resulting system of constraints may not be finite and some variables in the constraint system may depend on an infinite number of other variables. This can result in a very hard or even impossible to solve constraint system. While we will stick with this formal approach for this thesis for the sake of simplicity, an escape route to this issue is described in \parencite{apinis2012side}.
 
-    \subsection{Precision loss}\label{section:precisionLoss}
+  \section{Precision loss}\label{section:precisionLoss}
     % TODO ref
     The main source of the precision loss of context-insensitive or partially context-sensitive analysis is the join over all states with the same context. Consider a procedure $f$ that has no effect, i.e., $s_f = e_f$. Even for this procedure, the $\textsf{combine}^{\#}$ function receives the less precise result of the join to combine it with the caller state. In this case it would be more precise, if it directly used the result from $\textsf{enter}^{\#}$ as the callee state for combining.\\
     Even for procedures that do change the state, there might be some parts of the state which are untouched by the call. If we can identify these untouched parts, we could reduce the precision loss experienced by using partial contexts.\\
     \\
     Let us clarify the source of the precision loss mentioned above with an example: For this we once again consider the example program \autoref{fig:example_ctx_sens}. This time we take the marked lines into account. When the program is analyzed context insensitively, not only will the state at the start node represent two possible values for the global variable \texttt{a}, but also for \texttt{c}. The state will therefore be 
-    \[\eta_\textsf{v}\ [s_{incr}, (\bullet)] = \{a \rightarrow \{-3, 1\}, c \rightarrow \{-10, 10\}\} \]
-    Even though the variable \texttt{c} is never changed within \texttt{incr()}, the mapping $c \rightarrow \{-10, 10\}$ is still copied into the caller state when combining the states for node $[v_5, (\bullet)]$. Therefore, the assertion in \autoref{code:assert_c} cannot be determined to hold solely with the information gained by context insensitive values-of-variables analysis. This precision loss could easily be avoided if we had some idea which global variables are definitely not changed by a procedure call.
+    \[\eta_\textsf{v}\ [s_{incr}, \bullet] = \{a \rightarrow \{-3, 1\}, c \rightarrow \{-10, 10\}\} \]
+    Even though the variable \texttt{c} is never changed within \texttt{incr()}, the mapping $c \rightarrow \{-10, 10\}$ is still copied into the caller state when combining the states for node $[v_5, \bullet]$. Therefore, the assertion in \autoref{code:assert_c} cannot be determined to hold solely with the information gained by context insensitive values-of-variables analysis. This precision loss could easily be avoided if we had some idea which global variables are definitely not changed by a procedure call.
 
     \begin{figure}
       \centering
