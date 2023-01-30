@@ -60,7 +60,7 @@
     % TODO: ref something for full description? Appendix?
 
   \section{Interprocedural analysis}
-    So far we only have defined how a program without procedure calls is analyzed. Now we want to introduce procedure calls of the form $f()$. For simplicity, we will only consider argumentless procedure calls without a return value. Arguments and return values can be simulated by using global variables.\\
+    So far we only have defined how a program without procedure calls is analyzed. Now we want to introduce procedure calls of the form $f()$. For simplicity, we will only consider argumentless procedure calls without a return value in our formal descriptions. Arguments and return values can be simulated by using global variables.\\
     Since a call has its own set of local variables to work with and a call stack can contain multiple of the same procedure (e.g. for recursion), we will analyze procedures in their own environment. However, we need to consider global variables and how the procedure affects these.\\
     The idea is to give procedures their own starting states and analyze them similarly as we have done before. The final state of the called procedure is then used to be combined back into the state of the caller before the call. Formalized for an edge $(u, f();, v)$ this looks as follows:
     \[\eta\ [s_f] \sqsupseteq \textsf{enter}^{\#}\ (\eta\ [u]) \]
