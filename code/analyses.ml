@@ -15,9 +15,9 @@ sig
 
   (* Functions for interprocedural analysis *)
   val special : (D.t, C.t) ctx -> lval option -> varinfo -> exp list -> D.t
-  val enter   : (D.t, C.t) ctx -> lval option -> fundec -> exp list -> (D.t * D.t) list
-  val return  : (D.t, C.t) ctx -> exp option  -> fundec -> D.t
-  val combine : (D.t, C.t) ctx -> lval option -> exp -> fundec -> exp list -> C.t option -> D.t -> D.t
+  val enter   : (D.t, C.t) ctx -> lval option -> fundec -> exp list -> (D.t*D.t) list
+  val return  : (D.t, C.t) ctx -> exp option -> fundec -> D.t
+  val combine : (D.t, C.t) ctx -> lval option -> exp -> fundec -> exp list -> C.t option -> D.t -> Queries.ask -> D.t
 
   val context : fundec -> D.t -> C.t
 
