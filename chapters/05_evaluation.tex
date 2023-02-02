@@ -2,11 +2,28 @@
 % Add the above to each chapter to make compiling the PDF easier in some editors.
 
 \chapter{Evaluation}\label{chapter:evaluation}
-  
+  In this chapter we evaluate our approach. This is split into two parts: First we test, whether our approach is sound, i.e., it does not lead to wrong results. After that we benchmark the implementation on some real world programs. The goal of the benchmark is to find out whether the approaches we proposed in \autoref{chapter:precisionLossVariableAnalyses} and \autoref{chapter:precisionLossThreadAnalyses} result in a noticeable benefit.
+
   \section{Testing}
-    - soundness checked with regression tests from \gob
+    The goal of this section is to ensure, that the addition of the \texttt{taintPartialContexts} to \gob\ as described in \autoref{sec:implementation} does not lead to wrong results. Additionally, we want to make sure that just activating the taint analysis on a fully context-sensitive analysis run does not lead to less precise results.\\
+    \\
+    \gob\ provides an extensive set of regression test cases already. These test edge cases of various features of the analyzer, e.g., analyses, domains and configuration options. Thus, each test case specifies a configuration that should be used for running it. We contributed a few new regression tests, that focus on specific edge cases of the taint analysis and show how it improves the precision of existing analyses.\\
+    To verify our implementation, we ran all regression test cases with the specified configuration, but additionally activated the taint analysis. This helps to ensure that no precision is lost, just by activating the taint analysis. These test runs helped to find some bugs, which then were fixed.\\
+    We do similar test runs for the \texttt{threadCreate} analysis.\\
+    \\
+    Additionally, we investigate the results of the benchmarks we describe in the following section. These reinforce the verdict that the taint analysis and the thread create analysis are sound in their implementation.
   
   \section{Benchmarking}
-    - coreutil as benchmarking programs\\
-    - various analysis runs performed with goblint: ctx insensitive with and without taint, precision compared, checks passing compared. 
-  % TODO: Does Taint analysis actually improve overall Analysis? Speed/accuracy vs. ctxinsens/ctxsens
+    \subsection{Benchmarks for improved \texttt{base} analysis}
+      % TODO: Specify, that it is for Variable analysis and that we only benchmark "base"
+      For benchmarking the improved \texttt{base} analysis (see \autoref{sec:improveVariableAnalyses}) we use the SV-Benchmarks' "Collection of Verification Tasks" \parencite{svBench}. This collection of verification tasks is "constructed and maintained as a common benchmark for evaluating the effectiveness and efficiency of state-of-the-art verification technology" \parencite{svBench}. Each verification task consists of a program and a corresponding specification, i.e., a set of properties. The verifier to be benchmarked, i.e., in our case the \gob\ analyzer with our changes, then performs an analysis run on a given program. After that it is checked, whether the verifier was able to proof the given set of properties. The properties we will focus on for our benchmarks are \texttt{unreach-call}, i.e., a specified function in the program is never called, \texttt{no-overflow}, i.e., no integer overflow occurs in the program, and \texttt{no-data-race}, i.e., the program contains no race condition. We performed benchmark runs on all C verification tasks which aim to prove one of these properties and checked for which of the tasks, we were able to proof the given property. To put the results into perspective, we performed three runs with different configurations: one where the \texttt{base} analysis was performed fully context sensitively, a second one where it was run context insensitively and a third one where it was run context insensitively, but the taint analysis was activated additionally.\\
+      \\
+      We also benchmark the improved \texttt{base} analysis with another approach. For this we use modified versions of programs from the GNU Core Utilities "coreutils" \parencite{gnuCoreutils}. These programs implement "the basic file, shell and text manipulation utilities of the GNU operating system. These are the core utilities which are expected to exist on every operating system."\parencite{gnuCoreutils}\\
+      Combined versions of the coreutil programs are found in a benchmark repository dedicated for benchmarking the \gob\ analyzer \parencite{goblintBench}. These are code files, where all external definitions from included files used in the program are merged into one single file. For these files we use a feature from the \gob\ analyzer itself to generate assertions at different points within the program. To generate these, the analyzer performs an analysis with a given configuration on a given program. \gob\ then uses the information it gains to place assertions which it knows are true in the program and produces an output file.\\
+      We can then use the resulting file with generated assertions to compare other analysis runs with different configurations. The metric for these comparisons is the number of proven assertions. For this approach to produce meaningful results, it is necessary that the configuration that is used to generate the assertions is at least as precise as the most precise configuration of the runs we want to compare. For this reason it is not sufficient to use programs, where assertions were generated with a configuration that performs the \texttt{base} analysis context insensitively.\\
+      There exist versions of the coreutil programs, where assertions have been generated context insensitively in the SV-Benchmarks \parencite{svBench}, however we need to generate them newly on our own with a context-sensitive \texttt{base} analysis.\\
+      \\
+
+    
+    \subsection{Benchmarks for improved \texttt{threadId} analysis}
+

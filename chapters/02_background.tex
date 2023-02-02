@@ -135,7 +135,7 @@
       \label{fig:example_ctx_sens}
     \end{figure}
 
-  \section{Partial context sensitivity}\label{section:partialCtxSens}
+  \section{Partial context sensitivity}\label{sec:partialCtxSens}
     While the context-sensitive approach from the previous section might be very precise, it can be quite costly in terms of computation time. To reach a middle ground between a context insensitive and a fully context-sensitive analysis, we change the approach so that contexts are different from the entry state of a call. With this we can group entry states by contexts to analyze a procedure multiple times. This time we group not once per individual entry state, but once per group of entry states.\\
     Let $\mathbb{C}$ be our context-domain. Instead of adding a state from the value-domain $\mathbb{D}$ to the program points $N$ we add an element from the context-domain. Thereby we change the definition of the mapping we want to compute as follows: We now have $\eta: (N \times \mathbb{C}) \rightarrow \mathbb{D}$.\\
     We also define a new function $\textsf{context}^{\#}: \mathbb{D} \rightarrow \mathbb{C}$ here. This function will calculate the context when entering a procedure. Additionally, the constraints for $\textsf{enter}^{\#}$ and $\textsf{combine}^{\#}$ are changed as follows:
@@ -149,7 +149,7 @@
     \\
     We have to note here that there are some severe issues with the approach for (partially) context-sensitive analyses described in this thesis: The resulting system of constraints may not be finite and some variables in the constraint system may depend on an infinite number of other variables. This can result in a very hard or even impossible-to-solve constraint system. While we will stick with this formal approach for this thesis for the sake of simplicity, an escape route to this issue is described in \parencite{apinis2012side}.
 
-  \section{Precision loss}\label{section:precisionLoss}
+  \section{Precision loss}\label{sec:precisionLoss}
     % TODO ref
     The main source of the precision loss in context-insensitive or partially context-sensitive analyses is the join over all states with the same context, i.e., when we take the least upper bound of a group of entry states. Consider a procedure $f$ that has no effect, i.e., $s_f = e_f$. Even for this procedure, the $\textsf{combine}^{\#}$ function receives the less precise result of the join $\bigsqcup$ to combine it with the caller state. In this simple case, the result would be more precise if the $\textsf{combine}^{\#}$ function could directly use the result from the corresponding $\textsf{enter}^{\#}$ as the callee state for combining.\\
     Even for procedures that do change the state, there might be some parts of the state which are untouched by the call. If we can identify these untouched parts, we could reduce the precision loss experienced by using partial contexts.\\
