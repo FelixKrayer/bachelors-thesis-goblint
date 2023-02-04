@@ -10,7 +10,6 @@ sig
 
   (* Transfer functions *)
   val assign: (D.t, C.t) ctx -> lval -> exp -> D.t
-  val vdecl : (D.t, C.t) ctx -> varinfo -> D.t
   val branch: (D.t, C.t) ctx -> exp -> bool -> D.t
 
   (* Functions for interprocedural analysis *)
@@ -21,7 +20,7 @@ sig
 
   val context : fundec -> D.t -> C.t
 
-  (* Function for analysis of multithreaded programs *)
+  (* Function for the analysis of multithreaded programs *)
   val threadenter : (D.t, C.t) ctx -> lval option -> varinfo -> exp list -> D.t list
   val threadspawn : (D.t, C.t) ctx -> lval option -> varinfo -> exp list -> (D.t, C.t) ctx -> D.t
 end

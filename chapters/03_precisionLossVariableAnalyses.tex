@@ -40,7 +40,6 @@
     where for an edge $(u, f();, v)$ we have $T_\textsf{ce} = \eta_\textsf{t}\ [e_f, c]$ for the respective context $c$ to be combined.\\
     Similar to before the $\textsf{combine}^{\#}_\textsf{v}$ function takes the caller mapping, restricts it to a subset of caller reachable variables and updates this mapping with the callee mapping restricted to the rest of caller reachable variables. In other words, the caller reachable variables are partitioned into two sets such that one subset is taken from the caller state while the other one is taken from the callee state. Before our change, the partitioning was done strictly in such a way that only the caller local variables were taken from the caller state and all global variables from the callee state. After our improvement, the global variables that are not tainted by the callee are also taken from the caller state and not from the callee anymore. Thereby the precision loss for untainted variables is eliminated.
     \\
-    % TODO: remove this "proof"?
     One might wonder if our change could lead to a case, where the callee state has a more precise value for a variable that is discarded because this variable is not in the tainted set. Concretely this situation would be described by 
     \[\exists \text{ Edge }(u, f();, v),\ x \in Globals: x \notin \eta_\textsf{t}\ [e_f, \bullet] \land (\eta_\textsf{v}\ [e_f, \bullet]\ x\subset \eta_\textsf{v}\ [u, \bullet]\ x)\]
     From $x \notin \eta_\textsf{t}\ [e_f, \bullet]$ we know that $x$ has not been altered in the procedure $f()$ since the node $s_f$ up until $e_f$, and therefore it holds that 
@@ -50,7 +49,6 @@
     Therefore, $\eta_\textsf{v}\ [e_f]\ x\supseteq \eta_\textsf{v}\ [u]\ x$ which is a contradiction to the proposed case which we can therefore exclude.
 
   \section{Implementation}\label{sec:implementation}
-  % TODO small schematic
   Before explaining the process of implementing the proposed taint analysis and its usage to improve other analyses, we introduce the \gob\ analyzer and its structure in this paragraph. The core functionality of \gob\ is to statically analyze C programs using an approach similar to the one described in \autoref{chapter:background}. This generally works as follows: After the C input file is preprocessed, a \ac{CFG} is generated. This graph is then used together with the specifications of various analyses to generate a constraint system. \gob\ solves this constraint system and produces different kinds of outputs to the user according to the solution (e.g. notifications, warnings or a visualization of the full solution).\\
   It is worth mentioning that \gob\ can perform multiple analyses on a program at the same time. For this a compound domain is built (for the value domain as well as for the context domain), that is a tuple of the domains corresponding to the analyses to be performed. To generate constraints, all activated analyses are taken into account, where the specification of each analysis acts on its corresponding part of the compound domain. Information can be transferred between the different analyses via a system called "queries".\\
   % TODO: Improve:
@@ -72,7 +70,7 @@
         \item \texttt{query} to implement the query system of \gob. This allows an analysis to broadcast information to be used in analyses.
         \item \textit{Transfer functions} which define the abstract effects of actions (similar to $[\![A]\!]^{\#}$ from \autoref{chapter:background}).
         \item \textit{Functions for interprocedural analysis}
-        \item \textit{Function for analysis of multithreaded programs}
+        \item \textit{Function for the analysis of multithreaded programs}
       \end{itemize}
 
       For our taint analysis we create a new module implementing this interface.\\
@@ -134,9 +132,9 @@
           \end{itemize}
           is returned by the \texttt{special} function.
 
-      \subsubsection{Function for analysis of multithreaded programs}
+      \subsubsection{Function for the analysis of multithreaded programs}
         To be able to analyze multithreaded programs, \gob's analysis interface requires the following functions: \texttt{threadenter} to compute the startstate for the newly created thread and \texttt{threadspawn} which computes the effect of a thread creating instruction to the state of the creating thread.\\
-        We implement the former of these two functions similarly to our \texttt{startstate} and \texttt{enter}. Thus, \texttt{threadenter} returns the empty set. In practice, we do not use the fact that we enter threads with an in the scope of this Thesis. We chose to implement \texttt{threadenter} in this way for consistency.\\
+        We implement the former of these two functions similarly to our \texttt{startstate} and \texttt{enter}. Thus, \texttt{threadenter} returns the empty set.\\
         To implement the other function, \texttt{threadspawn}, we consider how a thread creation effects the state of the creator. We note that for our notion of taintedness the only relevant effect is, that the thread creating function may write thread ID variables to which it receives a reference as an argument. Thus, this function uses the helper function \texttt{taint\_lval} defined in the "Transfer Functions" section to add possibly tainted \ac{lval}s to the state from before and returns the result.
 
       \subsubsection{The \texttt{query} function}
@@ -162,7 +160,7 @@
       \begin{itemize}
         \item For a global variable, there is no mapping in the callee state, but there is one in the caller state. This case can occur in multithreaded mode, if this variable was protected by a mutex before the call, but the mutex was released in the called function. In this case, the mapping for this variable would be removed from the state within the callee. In the \texttt{combine} function, we do need to keep this new information from the callee for such a variable, i.e., remove it from the caller mapping. Therefore, we filter over the caller mapping and remove all globals, for which there exists no mapping in the callee mapping.
 
-        \item For a global variable, there is a mapping in the caller state, but there is none in the callee state. This case can occur if new information is gained within the call, e.g., some new memory is allocated. This information is not tracked by the tainted set and would therefore not be copied into the caller state. Since we still want to have this new information after the combine, we add all these mappings from the callee to the caller.
+        \item For a global variable, there is a mapping in the callee state, but there is none in the caller state. This case can occur if new information is gained within the call, e.g., some new memory is allocated. This information is not tracked by the tainted set and would therefore not be copied into the caller state. Since we still want to have this new information after the combine, we add all these mappings from the callee to the caller.
       \end{itemize}
       These cases have to be handled separately, as for these the corresponding \ac{lval} is not necessarily contained in the tainted set. After the two special cases are handled, we use the \texttt{combine\_st} helper function to finally update the tainted \ac{lval}s in the caller state. We then proceed with the resulting state to the steps 4 and 5 like before.\\
       We note here that we added a new parameter \texttt{f\_ask} to the \texttt{combine} function. To do this we had to update the analysis interface and consequently all analyses implementing it. This new parameter allows us to send queries to the returned callee state, which was not possible before.

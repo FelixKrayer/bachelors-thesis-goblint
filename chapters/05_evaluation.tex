@@ -10,14 +10,13 @@
     \gob\ provides an extensive set of regression test cases already. These test edge cases of various features of the analyzer. Each test case comes with a specific configuration, that should be used when executing the test.\\
     To verify our implementation, we ran all regression test cases with their specified configuration, but additionally activated the taint analysis. This helps to ensure that no precision is lost, just by activating the taint analysis. These test runs helped to find some bugs, which then were fixed.\\
     For the \texttt{threadCreate} analysis we used the same approach, where we ran all regression tests with the thread-create analysis additionally activated.\\
-    We also contributed a few new regression tests which specifically test edge cases of the taint and the thread-create analysis. These include tests for each existing analysis, where we included our two new analyses, as well as tests for bugs we cleared to show the correct behavior after the fix. The new regression tests also aim to demonstrate how our changes improve the precision of existing analyses.\\
+    We also contributed a few new regression tests which specifically test edge cases of the taint and the thread-create analysis. These include tests for each existing analysis, where we included either of our two new analyses, as well as tests for bugs we cleared to show the correct behavior after the fix. The new regression tests also aim to demonstrate how our changes improve the precision of existing analyses.\\
     \\
-    Additionally, we investigate the results of the benchmarks we describe in the following section. These reinforce the verdict that the taint analysis and the thread create analysis are sound in their implementation.
+    Additionally, we investigate the results of the benchmarks we describe in the following section. These reinforce the verdict that the taint analysis and the thread-create analysis are sound in their implementation.
   
-  \section{Benchmarking}
-    %TODO: sentence
-    \subsection{Benchmarks for improved \texttt{base} analysis}
-      % TODO: Specify, that it is for Variable analysis and that we only benchmark "base"
+  \section{Benchmarking the improved \texttt{base} analysis}
+    % TODO: Specify, that it is for Variable analysis and that we only benchmark "base"
+    \subsection{SV-Benchmarks}\label{sec:benchSVbench}
       For benchmarking the improved \texttt{base} analysis (see \autoref{sec:improveVariableAnalyses}) we use the SV-Benchmarks' "Collection of Verification Tasks" \parencite{svBench}. This collection of verification tasks is "constructed and maintained as a common benchmark for evaluating the effectiveness and efficiency of state-of-the-art verification technology" \parencite{svBench}. Each verification task consists of a program and a corresponding specification, i.e., a set of properties. The verifier to be benchmarked, i.e., in our case the \gob\ analyzer with our changes, then performs an analysis run on a given program. After that it is checked, whether the verifier was able to proof the given set of properties. The properties we focus on for our benchmarks are the following:
       \begin{itemize}
         \item \texttt{unreach-call}: A specified function \texttt{reach\_error()} in the program is never called during runtime.
@@ -27,12 +26,36 @@
       For each of these properties, we perform three benchmark runs with different configurations on each program for which it is specified that the property holds.
       The three configurations we use for the benchmark runs are:
       \begin{itemize}
-        \item The \texttt{base} analysis is performed context-sensitively.
-        \item The \texttt{base} analysis is performed context-insensitively.
-        \item The \texttt{base} analysis is performed context-insensitively with the improvements of the taint analysis.
+        \item \textit{sens}: The \texttt{base} analysis is performed context-sensitively.
+        \item \textit{insens}: The \texttt{base} analysis is performed context-insensitively.
+        \item \textit{insens taint}: The \texttt{base} analysis is performed context-insensitively with the improvements of the taint analysis.
       \end{itemize}
       During each benchmark run with a certain configuration we save different kinds of information to compare later. The most important of which are the computation time per program and the total number of programs, for which the property to prove was proven.\\
-      We then compare the number of programs for which the property was proven per configuration and property. We visualize the results with the following graph:
+      We first investigate the precision. For this we compare the number of programs for which the property was proven per configuration and property: The raw numbers can be found in \autoref{tbl:resultSVbench}, while the graph in \autoref{fig:resultSVbench} shows a visualization of the results.\\
+
+      \begin{table}
+        \centering
+        \begin{tabular}{l|l||r|r||r|r|r}
+          %\multicolumn{1}{l|}{property} & \multicolumn{1}{l||}{config} & \multicolumn{1}{l|}{\# proven} & \multicolumn{1}{l||}{\# total} & \multicolumn{1}{l|}{\% loss} & \multicolumn{1}{l|}{\% recovered} \\
+          \textit{property} & \textit{config.} & \textit{\# proven} & \textit{\# total} & \textit{\# loss by} & \textit{\# recovered} & \textit{\% recovered}\\
+            &  &  &  & \textit{insens} & & \textit{of loss}\\
+          \hline
+          \texttt{unreach-call} & \textit{sens} & 1925 & 10173 & 31 & 20 & 64.52\%\\
+          & \textit{insens} & 1894 & & & & \\
+          & \textit{insens taint} & 1914 & & & & \\
+          \hline
+          \texttt{no-overflow} & \textit{sens} & 3456 & 8474 & 16 & -17 & -43.75\%\\
+          & \textit{insens} & 3440 & & & & \\
+          & \textit{insens taint} & 3433 & & & & \\
+          \hline
+          \texttt{no-data-race} & \textit{sens} & 671 & 903 & -1 & 0 & 0.00\%\\
+          & \textit{insens} & 672 & & & & \\
+          & \textit{insens taint} & 672 & & & & \\
+          \hline
+        \end{tabular}
+        \caption{Table showing the results of the SV-Benchmarks}
+        \label{tbl:resultSVbench}
+      \end{table}
 
       \begin{figure}
         \centering
@@ -67,13 +90,53 @@
           \legend{insens, insens taint, sens}  
           \end{axis}
         \end{tikzpicture}
+        \caption{Bar graph for the comparison of the three configurations per property. A bar represents the percentage of programs, for which the corresponding property was proven using the corresponding configuration}
+        \label{fig:resultSVbench}
       \end{figure}
 
+      As we can see in \autoref{fig:resultSVbench}, there is in fact not a big difference between the three configurations for each property. Our interpretation of this result is, that the choice between our three configurations only has a small effect on the precision of \gob when analyzing real world programs. In other words this means, that not a lot of precision is lost by performing the \texttt{base} analysis context insensitively. The taint analysis can only recover lost precision, so little over all precision loss means, that the taint analysis can only provide little over all improvement.\\
+      \\
+      We now take a closer look at \autoref{tbl:resultSVbench}. First we talk about the \texttt{unreach call} property:
+      We see, that with the \textit{insens} configuration, the analyzer was able to proof the property 31 times fewer than with the \textit{sens} configuration. However, it proved the property 20 times more often with the \textit{insens taint} configuration compared to the \textit{insens} configuration. This leads us to the conclusion, that for this property the taint analysis helped to recover about 65\% of the precision lost.\\
+      As for the results of the \texttt{no-overflow} property, it seems like the usage of the taint analysis leads to less precise results. This property was proven for 17 fewer programs, when using the \textit{insens taint} configuration instead of the \textit{insens} configuration. In fact these results helped us find a bug in our implementation. This bug is now fixed and the \texttt{no-overflow} property can now be proven for these 17 programs with the \textit{insens taint} configuration. In conclusion however, we cannot say that the taint analysis provided an improvement for proving the \texttt{no-overflow} property.\\
+      Similarly, the \textit{insens taint} configuration is exactly as precise as the \texttt{insens} configuration for the \texttt{no-data-race} property. The reason, that the \textit{sens} configuration proved the property for one fewer program than both of the other configurations is a timeout. Considering this, we come to the conclusion, that for this property all three configurations are equally precise.\\
+      \\
+      <TODO: TIMINGS!!!>
+
+    \subsection{GNU Coreutils}\label{sec:benchCoreutils}
       We also benchmark the improved \texttt{base} analysis with another approach. For this we use modified versions of C programs from the GNU Core Utilities "coreutils" \parencite{gnuCoreutils}. These programs implement "the basic file, shell and text manipulation utilities of the GNU operating system. These are the core utilities which are expected to exist on every operating system."\parencite{gnuCoreutils}\\
       Combined versions of the coreutil programs are found in a benchmark repository dedicated for benchmarking the \gob\ analyzer \parencite{goblintBench}. A "combined version" of a program is a code file, where all dependencies of included files of the program are merged into one single code file.\\
       For these combined programs we use a feature from the \gob\ analyzer itself to generate assertions at different points within the program. An assertion is an equality or inequality involving program variables, that holds for every concrete execution of the program. To generate these, the analyzer performs an analysis with a given configuration on a given program. \gob\ then uses the information it gains to place assertions which it knows are true in the program and produces an output file.\\
       We can then use the resulting file with generated assertions to compare other analysis runs with different configurations. The metric for these comparisons is the number of proven assertions. It is necessary that the configuration which is used to generate the assertions is at least as precise as the most precise configuration of the runs we want to compare. Only the can this benchmarking approach to produce meaningful results.\\
-      For this reason we generate assertions with a configuration that performs the \texttt{base} analysis context sensitively.\\
+      For this reason we generate assertions with a configuration that performs the \texttt{base} analysis context sensitively. In order to do this we followed an approach similar to Julian Erhard, where he generated asserts for theses programs context insensitively. A detailed description of his approach can be found in \parencite{svBenchCoreutils}.\\
+      \\
+      \begin{table}
+        \centering
+        \begin{tabular}{l|l||r|r||r|r|r}
+          \textit{program} & \textit{config.} & \textit{\# proven} & \textit{\# total} & \textit{\# loss by} & \textit{\# recovered} & \textit{\% recovered}\\
+            &  &  &  & \textit{insens} & & \textit{of loss}\\
+          \hline
+          \texttt{cksum\_comb.c} & \textit{sens} & 1925 & 10173 & 31 & 20 & 64.52\%\\
+          & \textit{insens} & 1894 & & & & \\
+          & \textit{insens taint} & 1914 & & & & \\
+          \hline
+          \texttt{cut\_comb.c} & \textit{sens} & 3456 & 8474 & 16 & -17 & -43.75\%\\
+          & \textit{insens} & 3440 & & & & \\
+          & \textit{insens taint} & 3433 & & & & \\
+          \hline
+          \texttt{dd\_comb.c} & \textit{sens} & 671 & 903 & -1 & 0 & 0.00\%\\
+          & \textit{insens} & 672 & & & & \\
+          & \textit{insens taint} & 672 & & & & \\
+          \hline
+        \end{tabular}
+        \caption{Table showing the results of the coreutils with generated assertions}
+        \label{tbl:resultCoreutils}
+      \end{table}
     
-    \subsection{Benchmarks for improved \texttt{threadId} analysis}
-
+  \section{Benchmarking the improved \texttt{threadId} analysis}
+    We only performed a partial benchmark for our improvement of the \texttt{threadId} analysis using the thread-create analysis. For this we again used the GNU coreutil programs, which we described in \autoref{sec:benchCoreutils}. This time however, instead of comparing the number of correctly proven assertions, we compare the number of race conditions, the \gob\ analyzer finds in each program with each configuration.\\
+    \\
+    TODO: Results:
+    \\
+    Our conclusion is the following: There definitely exist cases, where the running the \texttt{threadId} partially context-sensitive leads to precision loss, which the thread-create analysis can reduce. We have shown this by adding a regression test of one such case to the \gob\ regression tests. However, such cases may only exist very rarely in real world programs.\\
+    It has to be noted that our benchmark for this analysis was only very small in scale. More extensive benchmarks are necessary to make a more meaningful statement. The next step in the future is to perform a benchmark run of the SV-Benchmarks' \texttt{unreach-call} property as described in \autoref{sec:benchSVbench}.
