@@ -2,7 +2,9 @@
 % Add the above to each chapter to make compiling the PDF easier in some editors.
 
 \chapter{Background}\label{chapter:background}
-%TODO: SOME TEXT!!!
+  % TODO
+  In this chapter we give ..
+  \parencite{cousot2021principles}
 
 \begin{figure}
   \centering
@@ -30,12 +32,10 @@
   \section{Static Analysis}
     Static analysis is defined by Rival~\parencite{rival2020introduction} as "[...]an automatic technique that approximates in a conservative manner semantic properties of programs before their execution". This means that the program is analyzed just by the given source code without execution. The goal is to prove certain properties about the program in a "sound" manner, i.e., any property that is proven to hold actually does hold. However, from failing to prove a property one cannot conclude that the given property does not hold.\\
     In order to prove properties, e.g. finding that a program does not contain races or identifying dead code, we need to gain information about the program. This is done by performing various kinds of analyses. We will focus on flow sensitive analyses from now on, i.e., analyses which find properties of the program dependent on the location within it. We will introduce a syntax to formalize flow sensitive analyses in the following sections. This formalization approach is heavily based on \parencite{apinis2012side}.
-    
-    // TODO: talk about Abstract Interpretation.
   
   \section{Flow sensitive analysis}
     As noted above flow sensitive analyses find properties of the program dependent on the point within the program. Expressed differently this means a flow sensitive analysis will find an overapproximation of states the program may be in for any given point within the program, from now on called "program point". This state can describe many things dependent on the analysis performed.\\
-    First let us define what a program point is: Consider a \ac{CFG}, where nodes represent points between instructions within the program. Edges are labeled with instructions or checks (from now on collectively called "actions") and describe the transitions between these points (see example \autoref{fig:example_cfg}). Then any node on this \ac{CFG} is what we call a program point.\\
+    First we define what a program point is: Consider a \ac{CFG}, where nodes represent points between instructions within the program. Edges are labeled with instructions or checks (from now on collectively called "actions") and describe the transitions between these points (see example \autoref{fig:example_cfg}). Then any node on this \ac{CFG} is what we call a program point.\\
     Concretely let $N$ be the set of all program points. Furthermore, let $\mathbb{D}$ be a Domain containing abstract states describing concrete states of the program. This means that some $d \in \mathbb{D}$ can describe many states the program can be in.\\ 
     Then an analysis is expected to find a mapping $\eta: N \rightarrow \mathbb{D}$ which maps program points to abstract states describing that location within the program, i.e., for $[v] \in N$, $\eta\ [v]$ should be an abstract state describing all possible states (and possibly more) the program can be in at program point $[v]$.\\
     \\
@@ -51,9 +51,9 @@
     where $[\![A]\!]^{\#}$ denotes the abstract effect of the action $A$ defining our analysis. In addition, we need a start state. This is given by $\textsf{init}^{\#}: \mathbb{D}$ which is defined depending on the analysis. This gives rise to the start constraint $\eta\ [s] \sqsupseteq \textsf{init}^{\#}$ for the starting point of the program $[s] \in N$.\\
     \\
     % TODO: Summarize analysis equations
-    We will show these ideas with our example of the values-of-variables analysis: Let us define the partial ordering $\sqsubseteq_\textsf{v}$ that is necessary for building the constraints. We will do this by stating that a mapping $M_1 \in \mathbb{D}_\textsf{v}$ is ordered below or equal to another mapping $M_2$, if and only if for every variable $x \in X$, the set $x$ is mapped to in $M_1$ is a subset of or equal to the one $x$ is mapped to in $M_2$. Formulated formally this is:
+    We will show these ideas with our example of the values-of-variables analysis: For this a partial ordering $\sqsubseteq_\textsf{v}$ on the domain $\mathbb{D}$ has to be defined. This ordering is needed to formulate the constraints. We define $\sqsubseteq_\textsf{v}$ as follows: A mapping $M_1 \in \mathbb{D}_\textsf{v}$ is ordered below or equal to another mapping $M_2$, if and only if for every variable $x \in X$, the set $x$ is mapped to in $M_1$ is a subset of or equal to the one $x$ is mapped to in $M_2$. Formulated formally this is:
     \[M_1, M_2 \in \mathbb{D}_\textsf{v}: M_1 \sqsubseteq_\textsf{v} M_2 \Longleftrightarrow \forall x \in X: M_1\ x \subseteq M_2\ x\]
-    Next we define the start state $\textsf{init}^{\#} = M_\top$ for this domain as the mapping that maps every variable to the full set of integers $\mathbb{N}$, i.e., $\forall x \in X: M_\top\ x = \mathbb{N}$. This is because we assume variables to be randomly initialized in our toy language.\\
+    Next we define the start state $\textsf{init}^{\#} = M_\top$ for this domain as the mapping that maps every variable to the full set of integers $\mathbb{N}$, i.e., $\forall x \in X: M_\top\ x = \mathbb{N}$. This is because we assume variables (both locals and globals) to be randomly initialized in our toy language.\\
     It remains to define the abstract effect of actions $[\![A]\!]^{\#}_\textsf{v}$ for our values-of-variables analysis. We will just show the effect of a simple variable assignment:
     \[ [\![ x=y; ]\!]^{\#}_\textsf{v}\ M = M \oplus \{x \mapsto (M\ y) \} \]
     where $M \oplus \{x \mapsto s\}$ denotes that the mapping $M$ is updated such that $x$ will be mapped to the set $s$. A full definition of abstract effects of a values-of-variables analysis can be found at <// TODO >.\\
@@ -74,7 +74,8 @@
     \[\textsf{enter}^{\#}_\textsf{v}\ M = M|_{Globals} \oplus \{x \mapsto \mathbb{N} | \forall x \in X\}|_{Locals_\textsf{ce}} \]
     \[\textsf{combine}^{\#}_\textsf{v}\ (M_\textsf{cr}, M_\textsf{ce}) = M_\textsf{cr}|_{Locals_\textsf{cr}} \oplus M_\textsf{ce}|_{Globals} \]
     where $M|_{Locals}$ and $M|_{Globals}$ refers to the mapping $M$ restricted to only the local or global variables respectively. Note that $Locals_\textsf{ce}$ refers to the locals of the callee while $Locals_\textsf{cr}$ refers to the locals of the caller.\\
-    To explain these two functions let us first look at $\textsf{enter}^{\#}_\textsf{v}$. This function takes the part of the mapping from the caller that contains information about global variables and adds the information of uninitialized local variables used in the procedure to the state. For $\textsf{combine}^{\#}_\textsf{v}$ the local part of the caller is kept, but it is updated with the global part of the callee return state, because the later contains the updated information about global variables after the procedure call.\\
+    The $\textsf{enter}^{\#}_\textsf{v}$ function first takes the part of the mapping from the caller that contains information about global variables. To the resulting state it adds the local variables used in the procedure. These map to $N$ because they randomly initialized in our toy language.\\
+    For $\textsf{combine}^{\#}_\textsf{v}$ the local part of the caller is kept, but it is updated with the global part of the callee return state. This is done, because the latter contains the updated information about global variables after the procedure call.\\
 
   \section{Context sensitivity}
     In the previous chapter we approached the analysis of procedures by analyzing them only once with an abstract start state describing all possible concrete states the procedure could start with. We call this behavior "context insensitive" as the procedure is analyzed without differentiating between different states with which it is called.\\
@@ -85,10 +86,10 @@
     leading to $\eta_\textsf{v}\ [s_{incr}] = \{a \rightarrow \{-3, 1\}\}$. At the end point of the call the state will be $\eta_\textsf{v}\ [e_{incr}] = \{a \rightarrow \{-2, 2\}\}$, which is then combined with the states of nodes in the main procedure. Therefore, the state at Node $[v_6]$ will be $\{a \rightarrow \{-2, 2\}\}$, which is used to check the \texttt{assert(a < 0);} in \autoref{code:assert_a}. The result of this assertion cannot be determined by the analysis even though it is easy for humans to see that it should hold.\\
     \\
     %TODO: make D to C already
-    This could have been avoided, if the procedure was analyzed twice, once with each starting state. To achieve this we will need to perform some modifications on our current approach: Instead of searching a mapping $\eta: N \rightarrow \mathbb{D}$ we now seek $\eta: (N \times \mathbb{D}) \rightarrow \mathbb{D}$. This allows us to have different states for the same program point. We call the second part of $N \times \mathbb{D}$ "context". For now this context will be the same as the starting state of the current procedure. Therefore, we need to adjust the constraints for $\textsf{enter}^{\#}$ and $\textsf{combine}^{\#}$:
+    This could have been avoided, if the procedure was analyzed twice, once with each starting state. To achieve this we modify our current approach as folows: Instead of searching a mapping $\eta: N \rightarrow \mathbb{D}$ we now seek $\eta: (N \times \mathbb{D}) \rightarrow \mathbb{D}$. This allows us to have different states for the same program point. We call the second part of $N \times \mathbb{D}$ "context". For now this context will be the same as the starting state of the current procedure. Therefore, we need to adjust the constraints for $\textsf{enter}^{\#}$ and $\textsf{combine}^{\#}$:
     \[\eta\ [s_f, \textsf{enter}^{\#}\ (\eta\ [u, d])] \sqsupseteq \textsf{enter}^{\#}\ (\eta\ [u, d]) \]
     \[\eta\ [v, d] \sqsupseteq \textsf{combine}^{\#}\ ((\eta\ [u, d]), (\eta\ [e_f, \textsf{enter}^{\#}\ (\eta\ [u, d])])) \]
-    The main procedure will always be analyzed just once, as in our toy language it is only called initially. The context for its nodes can be chosen arbitrarily.\\
+    For our toy language, we assume that the main procedure cannot be called from another procedure. Thus, the context for its nodes can be chosen arbitrarily.\\
     \\
     There are no changes we need to perform on the values-of-variables analysis to make it context-sensitive. Solely the changes to the general analysis framework above suffice.\\ Applying this changed analysis to the example in \autoref{fig:example_ctx_sens} would lead to the procedure \texttt{incr()} being analyzed twice with different contexts, assuming we still ignore the marked lines. This leads to the following two entry constraints for different unknowns of the constraint system:
     \[\eta_\textsf{v}\ [s_{incr}, \{a \rightarrow \{1\} \}] \sqsupseteq_\textsf{v} \{a \rightarrow \{1\} \} \]
@@ -104,7 +105,7 @@
       \begin{subfigure}{.30\textwidth}
         \centering
         \begin{tikzpicture}[node distance={40pt}, main/.style = {draw, circle}] 
-          \node[main] (0) {$s$};
+          \node[main] (0) {$s_{main}$};
           \node[main] (1) [below of=0] {$v_1$};
           \node[main] (2) [below of=1] {$v_2$};
           \node[main] (3) [below of=2] {$v_3$};
@@ -112,7 +113,7 @@
           \node[main] (5) [below of=4] {$v_5$};
           \node[main] (6) [below of=5] {$v_6$};
           \node[main] (7) [below of=6] {$v_7$};
-          \node[main] (8) [below of=7] {$e$};
+          \node[main] (8) [below of=7] {$e_{main}$};
           \draw[->] (0) -- node[midway, xshift=20pt, yshift=9pt, pos=1] {a = 1;} (1);
           \draw[->] (1) -- node[midway, xshift=20pt, yshift=9pt, pos=1] {\colorbox{TUMAccentLightBlue}{c = 10;}} (2);
           \draw[->] (2) -- node[midway, xshift=20pt, yshift=9pt, pos=1] {incr();} (3);
@@ -147,14 +148,15 @@
     i.e., the constraint for the variable $[s_f, c']$ is the least upper bound of all entry states for some call of $f$, which have the same context $c'$ as the constraint variable. Or expressed differently, all states computed by $\textsf{enter}^{\#}\ d$ for $f$ are grouped by the context $c' = \textsf{context}^{\#}\ d$, where each group is joined by $\bigsqcup$ to produce a constraint for a starting variable $[s_f, c']$ with the respective context.\\ 
     With this formal model we have the option to perform an analysis completely context sensitively ($\mathbb{C} = \mathbb{D}$ and $\textsf{context}^{\#} = \textsf{enter}^{\#}$), completely context insensitively ($\mathbb{C} = \{\bullet\}$) or anything in between. Note that we define $\{\bullet\}$ as the "unit domain" which contains exactly one element with the trivial ordering $\bullet \sqsubseteq \bullet$.\\
     \\
-    We have to note here that there are some severe issues with the approach for (partially) context-sensitive analyses described in this thesis: The resulting system of constraints may not be finite and some variables in the constraint system may depend on an infinite number of other variables. This can result in a very hard or even impossible-to-solve constraint system. While we will stick with this formal approach for this thesis for the sake of simplicity, an escape route to this issue is described in \parencite{apinis2012side}.
+    We have to note here that there are some severe issues with the approach for (partially) context-sensitive analyses described in this thesis: The resulting system of constraints may not be finite and some variables in the constraint system may depend on an infinite number of other variables. Thus, it is computationally complex to compute a solution to the system of constraints. For simplicity, we stick with the described methodology in the scope of this thesis.\\
+    An extension to the approach which addresses the mentioned issue can be found in \parencite{apinis2012side}.
 
   \section{Precision loss}\label{sec:precisionLoss}
     % TODO ref
     The main source of the precision loss in context-insensitive or partially context-sensitive analyses is the join over all states with the same context, i.e., when we take the least upper bound of a group of entry states. Consider a procedure $f$ that has no effect, i.e., $s_f = e_f$. Even for this procedure, the $\textsf{combine}^{\#}$ function receives the less precise result of the join $\bigsqcup$ to combine it with the caller state. In this simple case, the result would be more precise if the $\textsf{combine}^{\#}$ function could directly use the result from the corresponding $\textsf{enter}^{\#}$ as the callee state for combining.\\
     Even for procedures that do change the state, there might be some parts of the state which are untouched by the call. If we can identify these untouched parts, we could reduce the precision loss experienced by using partial contexts.\\
     \\
-    Let us clarify the source of the precision loss mentioned above with an example: For this we once again consider the example program \autoref{fig:example_ctx_sens}. This time we take the marked lines into account. When the program is analyzed context insensitively, not only does the state at the start node for \texttt{incr()} $s_{incr}$ represent two possible values for the global variable \texttt{a}, but also for \texttt{c}. Therefore, the state for this node is
+    We clarify the source of the precision loss mentioned above with an example: For this we once again consider the example program \autoref{fig:example_ctx_sens}. This time we take the marked lines into account. When the program is analyzed context insensitively, not only does the state at the start node for \texttt{incr()} $s_{incr}$ represent two possible values for the global variable \texttt{a}, but also for \texttt{c}. Therefore, the state for this node is
     \[\eta_\textsf{v}\ [s_{incr}, \bullet] = \{a \rightarrow \{-3, 1\}, c \rightarrow \{-10, 10\}\} \]
     Even though the variable \texttt{c} is never changed within \texttt{incr()}, the mapping $c \rightarrow \{-10, 10\}$ is still copied into the caller state when combining the states for node $v_6$. Thus, the information gained by the context insensitive values-of-variables analysis does not suffice to determine the assertion in \autoref{code:assert_c} to hold. This loss of precision could easily be avoided if we had some idea which global variables are definitely not changed by a procedure call.
 

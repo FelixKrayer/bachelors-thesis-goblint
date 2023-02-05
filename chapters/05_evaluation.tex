@@ -40,15 +40,15 @@
           \textit{property} & \textit{config.} & \textit{\# proven} & \textit{\# total} & \textit{\# loss by} & \textit{\# recovered} & \textit{\% recovered}\\
             &  &  &  & \textit{insens} & & \textit{of loss}\\
           \hline
-          \texttt{unreach-call} & \textit{sens} & 1925 & 10173 & 31 & 20 & 64.52\%\\
+          \texttt{unreach-call} & \textit{sens} & 1925 & 10173 & 31 & 20 & 64.52\\
           & \textit{insens} & 1894 & & & & \\
           & \textit{insens taint} & 1914 & & & & \\
           \hline
-          \texttt{no-overflow} & \textit{sens} & 3456 & 8474 & 16 & -17 & -43.75\%\\
+          \texttt{no-overflow} & \textit{sens} & 3456 & 8474 & 16 & -17 & -43.75\\
           & \textit{insens} & 3440 & & & & \\
           & \textit{insens taint} & 3433 & & & & \\
           \hline
-          \texttt{no-data-race} & \textit{sens} & 671 & 903 & -1 & 0 & 0.00\%\\
+          \texttt{no-data-race} & \textit{sens} & 671 & 903 & -1 & 0 & 0.00\\
           & \textit{insens} & 672 & & & & \\
           & \textit{insens taint} & 672 & & & & \\
           \hline
@@ -109,34 +109,65 @@
       For these combined programs we use a feature from the \gob\ analyzer itself to generate assertions at different points within the program. An assertion is an equality or inequality involving program variables, that holds for every concrete execution of the program. To generate these, the analyzer performs an analysis with a given configuration on a given program. \gob\ then uses the information it gains to place assertions which it knows are true in the program and produces an output file.\\
       We can then use the resulting file with generated assertions to compare other analysis runs with different configurations. The metric for these comparisons is the number of proven assertions. It is necessary that the configuration which is used to generate the assertions is at least as precise as the most precise configuration of the runs we want to compare. Only the can this benchmarking approach to produce meaningful results.\\
       For this reason we generate assertions with a configuration that performs the \texttt{base} analysis context sensitively. In order to do this we followed an approach similar to Julian Erhard, where he generated asserts for theses programs context insensitively. A detailed description of his approach can be found in \parencite{svBenchCoreutils}.\\
-      \\
+      We compare the same configurations we compared in \autoref{sec:benchSVbench}.\\
+      
       \begin{table}
         \centering
         \begin{tabular}{l|l||r|r||r|r|r}
-          \textit{program} & \textit{config.} & \textit{\# proven} & \textit{\# total} & \textit{\# loss by} & \textit{\# recovered} & \textit{\% recovered}\\
-            &  &  &  & \textit{insens} & & \textit{of loss}\\
+          \textit{program} & \textit{config.} & \textit{\# asserts} & \textit{\# total} & \textit{\% loss by} & \textit{\% recovered} & \textit{\% recovered}\\
+            &  & \textit{proven} & \textit{asserts} & \textit{insens} & \textit{of total} & \textit{of loss}\\
           \hline
-          \texttt{cksum\_comb.c} & \textit{sens} & 1925 & 10173 & 31 & 20 & 64.52\%\\
-          & \textit{insens} & 1894 & & & & \\
-          & \textit{insens taint} & 1914 & & & & \\
+          \texttt{cksum\_comb.c} & \textit{sens} & 1998 & 1998 & 1.30 & 0.00 & 0.00\\
+          & \textit{insens} & 1972 & 1998 & & & \\
+          & \textit{insens taint} & 1972 & 1998 & & & \\
           \hline
-          \texttt{cut\_comb.c} & \textit{sens} & 3456 & 8474 & 16 & -17 & -43.75\%\\
-          & \textit{insens} & 3440 & & & & \\
-          & \textit{insens taint} & 3433 & & & & \\
+          \texttt{cut\_comb.c} & \textit{sens} & 3992 & 3992 & 0.30 & 0.00 & 0.00\\
+          & \textit{insens} & 3979 & 3992 & & & \\
+          & \textit{insens taint} & 3979 & 3992 & & & \\
           \hline
-          \texttt{dd\_comb.c} & \textit{sens} & 671 & 903 & -1 & 0 & 0.00\%\\
-          & \textit{insens} & 672 & & & & \\
-          & \textit{insens taint} & 672 & & & & \\
+          \texttt{dd\_comb.c} & \textit{sens} & 4462 & 4464 & 2.97 & 0.49 & 16.54\\
+          & \textit{insens} & 4337 & 4472 & & & \\
+          & \textit{insens taint} & 4359 & 4472 & & & \\
+          \hline          
+          \texttt{df\_comb.c} & \textit{sens} & 8834 & 8834 & 12.68 & 0.05 & 0.36\\
+          & \textit{insens} & 7714 & 8834 & & & \\
+          & \textit{insens taint} & 7718 & 8834 & & & \\
+          \hline         
+          \texttt{du\_comb.c} & \textit{sens} & 9810 & 9810 & 3.41 & 0.05 & 1.50\\
+          & \textit{insens} & 9464 & 9798 & & & \\
+          & \textit{insens taint} & 9469 & 9798 & & & \\
+          \hline         
+          \texttt{nohup\_comb.c} & \textit{sens} & 3397 & 3397 & 0.77 & 0.00 & 0.00\\
+          & \textit{insens} & 3371 & 3397 & & & \\
+          & \textit{insens taint} & 3371 & 3397 & & & \\
+          \hline         
+          \texttt{ptx\_comb.c} & \textit{sens} & 5786 & 5786 & 4.46 & 0.07 & 1.55\\
+          & \textit{insens} & 5528 & 5786 & & & \\
+          & \textit{insens taint} & 5532 & 5786 & & & \\
+          \hline         
+          \texttt{tail\_comb.c} & \textit{sens} & 4806 & 4806 & 0.50 & 0.00 & 0.00\\
+          & \textit{insens} & 4782 & 4806 & & & \\
+          & \textit{insens taint} & 4782 & 4806 & & & \\
           \hline
         \end{tabular}
         \caption{Table showing the results of the coreutils with generated assertions}
         \label{tbl:resultCoreutils}
       \end{table}
+
+      The results of the benchmark runs on the coreutil programs can be seen in \autoref{tbl:resultCoreutils}. We omit the results for two further programs \texttt{cp\_comb.c} and \texttt{mv\_comb.c} because for these the analyzer proved some assertions to evaluate to "false" with the \textit{insens} and \textit{insens taint}. This hints at bugs in the analyzer which are unrelated to our changes.\\
+      The numbers of total assertions differs between the \textit{sens} and both \textit{insens (taint)} configurations for some programs. The reason for this is, that an assertion in a function can be checked multiple times, once for each context the function is evaluated with. Therefore, we compare percentages for this benchmark.\\
+      We make the following observations: The percentage of the precision loss that is recovered reaches over 16\% for one program while it stays below 2\% for all other programs. For three of the eight programs shown, no improvement was achieved at all. From this we conclude that it depends a lot on the program which analyzed, how much the taint analysis can improve the precision loss.\\
+      We also note that the "\textit{\% recovered of total}" is rather low. That is the percentage of assertions, which were found with the \textit{insens taint} but not the \textit{insens} configuration, never surpasses 0.5\%. Therefore, we conclude that the effect of our changes on the overall precision of the analyzer is very limited.      
     
   \section{Benchmarking the improved \texttt{threadId} analysis}
-    We only performed a partial benchmark for our improvement of the \texttt{threadId} analysis using the thread-create analysis. For this we again used the GNU coreutil programs, which we described in \autoref{sec:benchCoreutils}. This time however, instead of comparing the number of correctly proven assertions, we compare the number of race conditions, the \gob\ analyzer finds in each program with each configuration.\\
+    We only performed a partial benchmark for our improvement of the \texttt{threadId} analysis using the thread-create analysis. For this we again used the GNU coreutil programs, which we described in \autoref{sec:benchCoreutils}. This time however, instead of comparing the number of correctly proven assertions, we compare the number of race conditions, the \gob\ analyzer finds in each program with each configuration. We compared these configurations:
+    \begin{itemize}
+      \item \textit{sens}: The \texttt{threadId} analysis is performed context-sensitively.
+      \item \textit{part-sens}: The \texttt{threadId} analysis is performed partially context-sensitively, i.e., only sensitive with respect to the thread ID but not with respect to the set of encountered create edges. Concretely, the option \texttt{ana.thread.context.createEdges} we added is disabled in this configuration.
+      \item \textit{part-sens taint}: Same configuration like \textit{part-sens} but with the improvements of the thread-create analysis enabled.
+    \end{itemize}
+    The results of this benchmark are as follows: For each of the coreutil programs, the analyzer finds between 5 and 8 race conditions. However, there is no difference between the three configurations. This means that for each program, the number of race conditions found is the same irregardless of the configuration chosen. This means that with this benchmarking setup we do not record any precision loss that results from partial context-sensitivity. Since no precision is lost, we cannot see, if the thread-create analysis provides an improvement.
     \\
-    TODO: Results:
-    \\
-    Our conclusion is the following: There definitely exist cases, where the running the \texttt{threadId} partially context-sensitive leads to precision loss, which the thread-create analysis can reduce. We have shown this by adding a regression test of one such case to the \gob\ regression tests. However, such cases may only exist very rarely in real world programs.\\
+    In conclusion there definitely exist cases, where the running the \texttt{threadId} partially context-sensitive leads to precision loss, which the thread-create analysis can reduce. We have shown this by adding a regression test of one such case to the \gob\ regression tests.\\
+    However, such cases may only exist very rarely in real world programs.\\
     It has to be noted that our benchmark for this analysis was only very small in scale. More extensive benchmarks are necessary to make a more meaningful statement. The next step in the future is to perform a benchmark run of the SV-Benchmarks' \texttt{unreach-call} property as described in \autoref{sec:benchSVbench}.

@@ -2,9 +2,19 @@
 % Add the above to each chapter to make compiling the PDF easier in some editors.
 
 \chapter{Introduction}\label{chapter:introduction}
-  \textbf{WIP:}\\
-  - introduce \gob\\
-  - show problem on a small example
+  The \gob\ analyzer is "a static analyzer for multithreaded C programs, specializing in finding concurrency bugs" \parencite{goblintHome}. The analyzer is built upon the principles of static analysis based on abstract interpretation. It performs analyses of various kinds to gain information about a given C program. With the gained information \gob\ can then prove various properties about a program. These include but are not limited to \parencite{goblintHome}:
+  \begin{itemize}
+    \item Race Detection: Checking that accesses to shared memory never happens simultaneously.
+    \item Assertions and Dead code: Checking whether specific logical expressions are definitely true at given points within the program. 
+    \item Integer Overflows: Verifying that no integer overflows occur in the program.
+  \end{itemize}
+  % multiple analyses performed
+  The analyzer is highly configurable. This allows the user to fine-tune the degree of precision they wish. Usually a higher degree of precision also results in a higher computation time.\\
+  One such configuration option allows the user to specify a set of analyses which are not performed context sensitively but rather context insensitively or only partially context sensitively. Context sensitivity describes the degree to which entry states of functions are differentiated. For an example consider the program in <Fig TODO>. Assume we analyze this program with the goal to find which values the program variables can have during program execution. For that we use an analysis that tracks a set of integers for each variable. These sets per variable change when the analyzer goes through the program step by step. An issue occurs, when a function is called. In this example there are two possibilities:
+  The analyzer can enter the function with the current state, goes through the instructions of the function and returns to the caller with the state at the return statement. This state is propagated until the second call, where the function is analyzed again with the current state as the entry state. This is context-sensitive analysis.\\
+  Alternatively
+
+
   % goblint
   % current approach with example
   %\lstinputlisting[language=C]{../code/01-example_intro.c}
