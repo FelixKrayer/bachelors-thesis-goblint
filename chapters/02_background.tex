@@ -39,7 +39,6 @@
     Concretely let $N$ be the set of all program points. Furthermore, let $\mathbb{D}$ be a Domain containing abstract states describing concrete states of the program. This means that some $d \in \mathbb{D}$ can describe many states the program can be in.\\ 
     Then an analysis is expected to find a mapping $\eta: N \rightarrow \mathbb{D}$ which maps program points to abstract states describing that location within the program, i.e., for $[v] \in N$, $\eta\ [v]$ should be an abstract state describing all possible states (and possibly more) the program can be in at program point $[v]$.\\
     \\
-    % TODO: locals/globals as acronym?
     As an example we will introduce a values-of-variables analysis for integers. This analysis finds a mapping from a set of program variables $X$ to abstractions of their possible values at any given program point. Our toy language will support global variables (globals) as well as local variables (locals). The global variables can be accessed and changed by any procedure, while local ones are only visible to the procedure in which it was declared and can only be accessed and changed by this procedure. Therefore, our set $X$ of variables is the disjoint union of globals $G$ and locals $L$: $X = G \uplus L$.
     In the scope of this thesis we will focus on abstracting integer values by sets of integers. Thereby the goal of our values-of-variables analysis is to find a mapping $X \rightarrow 2^\mathbb{N}$ for each program point.\\
     Combining this with the considerations from above, we chose the mapping $\mathbb{D}_\textsf{v} = X \rightarrow 2^\mathbb{N}$ as the Domain for the values-of-variables analysis. In summary this means that the resulting $\eta_\textsf{v}: N \rightarrow \mathbb{D}_\textsf{v}$ for this analysis describes a mapping $\eta_\textsf{v}\ [v]$ for some program point $[v] \in N$, where $\eta_\textsf{v}\ [v]\ x$ is a set containing all values $x \in X$ may possibly hold at $[v]$. From this we can conclude that $x$ cannot hold any value outside $\eta_\textsf{v}\ [v]\ x$ at program point $[v]$.
@@ -50,14 +49,15 @@
     \[\eta\ [v] \sqsupseteq [\![A]\!]^{\#}\ (\eta\ [u])\]
     where $[\![A]\!]^{\#}$ denotes the abstract effect of the action $A$ defining our analysis. In addition, we need a start state. This is given by $\textsf{init}^{\#}: \mathbb{D}$ which is defined depending on the analysis. This gives rise to the start constraint $\eta\ [s] \sqsupseteq \textsf{init}^{\#}$ for the starting point of the program $[s] \in N$.\\
     \\
-    % TODO: Summarize analysis equations
     We will show these ideas with our example of the values-of-variables analysis: For this a partial ordering $\sqsubseteq_\textsf{v}$ on the domain $\mathbb{D}$ has to be defined. This ordering is needed to formulate the constraints. We define $\sqsubseteq_\textsf{v}$ as follows: A mapping $M_1 \in \mathbb{D}_\textsf{v}$ is ordered below or equal to another mapping $M_2$, if and only if for every variable $x \in X$, the set $x$ is mapped to in $M_1$ is a subset of or equal to the one $x$ is mapped to in $M_2$. Formulated formally this is:
     \[M_1, M_2 \in \mathbb{D}_\textsf{v}: M_1 \sqsubseteq_\textsf{v} M_2 \Longleftrightarrow \forall x \in X: M_1\ x \subseteq M_2\ x\]
     Next we define the start state $\textsf{init}^{\#} = M_\top$ for this domain as the mapping that maps every variable to the full set of integers $\mathbb{N}$, i.e., $\forall x \in X: M_\top\ x = \mathbb{N}$. This is because we assume variables (both locals and globals) to be randomly initialized in our toy language.\\
     It remains to define the abstract effect of actions $[\![A]\!]^{\#}_\textsf{v}$ for our values-of-variables analysis. We will just show the effect of a simple variable assignment:
     \[ [\![ x=y; ]\!]^{\#}_\textsf{v}\ M = M \oplus \{x \mapsto (M\ y) \} \]
-    where $M \oplus \{x \mapsto s\}$ denotes that the mapping $M$ is updated such that $x$ will be mapped to the set $s$. A full definition of abstract effects of a values-of-variables analysis can be found at <// TODO >.\\
-    % TODO: ref something for full description? Appendix?
+    where $M \oplus \{x \mapsto s\}$ denotes that the mapping $M$ is updated such that $x$ will be mapped to the set $s$.\\
+    In general, for assignments of expressions $e$ we evaluate the expression abstractly, i.e., such that the result of the evaluation is the set that contains all integer values $e$ could possibly evaluate to. For example 
+    \[ [\![ x=x+1; ]\!]^{\#}_\textsf{v}\ \{x \mapsto \{1,2\}\} = \{x \mapsto \{1,2\}\} \oplus \{x \mapsto \{2,3\}\} = \{x \mapsto \{2,3\}\}\]
+    A much deeper insight in how expressions are evaluated in abstract interpretation can be found in Patrick Cousot's book "Principles of Abstract Interpretation" in Chapter 3 \parencite{cousot2021principles}.
 
   \section{Interprocedural analysis}
     So far we only have defined how a program without procedure calls is analyzed. Now we want to introduce procedure calls of the form $f()$. For simplicity, we will only consider argumentless procedure calls without a return value in our formal descriptions. Arguments and return values can be simulated by using global variables.\\
@@ -152,7 +152,6 @@
     An extension to the approach which addresses the mentioned issue can be found in \parencite{apinis2012side}.
 
   \section{Precision loss}\label{sec:precisionLoss}
-    % TODO ref
     The main source of the precision loss in context-insensitive or partially context-sensitive analyses is the join over all states with the same context, i.e., when we take the least upper bound of a group of entry states. Consider a procedure $f$ that has no effect, i.e., $s_f = e_f$. Even for this procedure, the $\textsf{combine}^{\#}$ function receives the less precise result of the join $\bigsqcup$ to combine it with the caller state. In this simple case, the result would be more precise if the $\textsf{combine}^{\#}$ function could directly use the result from the corresponding $\textsf{enter}^{\#}$ as the callee state for combining.\\
     Even for procedures that do change the state, there might be some parts of the state which are untouched by the call. If we can identify these untouched parts, we could reduce the precision loss experienced by using partial contexts.\\
     \\

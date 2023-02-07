@@ -2,6 +2,25 @@
 % Add the above to each chapter to make compiling the PDF easier in some editors.
 
 \chapter{Combatting the Precision Loss of Thread Analyses}\label{chapter:precisionLossThreadAnalyses}
-
-\parencite{schwarz2023clustered}
+% local traces
+  To (((Something))) M. Schwarz et al. \parencite{schwarz2023clustered}.
+  \section{Theory}
+  In Chapter 6 of their paper \parencite{schwarz2023clustered} they propose an analysis that identifies threads by their creation history. Among other things, this analysis helps to identify which actions may or may not happen in parallel.\\
+  As mentioned, threads are identified by their creation history, which is used as an ID to identify different threads. This history is a sequence of create edges starting with $\textsf{main}$. 
+  To prevent such a history to grow to infinity, they define the notion of non-unique thread IDs which may identify multiple threads each.\\
+  Formally, the set of possible abstract thread IDs $\mathcal{I}^{\#}$ is $(\textsf{main}\cdot\mathcal{P}^*) \times 2^{\mathcal{P}}$, where $\mathcal{P}$ is the set of create edges and $\mathcal{P}^*$ a sequence of such edges. $\langle u, f \rangle \in \mathcal{P}$ refers to an outgoing edge from program point $u$ which creates a thread starting at $f$.
+  In this notion, IDs of the form $(i, \emptyset) \in \mathcal{I}^{\#}$ are unique, while $(i, s) \in \mathcal{I}^{\#}$ are not unique if $s \neq \emptyset$.\\
+  To better provide a better understanding of these definitions we explain them with the following example:\\
+  %TODO: Example
+  \\
+  \\
+  % TODO: Precision Loss
+  \\
+  We propose a "thread-create" analysis that checks for each function, whether a thread is possibly created between the entry to it and the return. Note that it does not matter, if a thread is created in the function itself or in another function which the function called. The domain we use for this analysis is the set of boolean values $\mathbb{D}_\textsf{tc} = \{\textsf{true}, \textsf{false}\}$. The analysis tracks whether a function \textit{may} create a thread. Thus, we encode uncertainty, i.e., "a thread \textit{may} have been created" with $\textsf{true}$. Therefore, the state at some program point $\eta_\textsf{tc}\ [v,\bullet]$ answers the question "\textit{May} a thread have been created since the entry of the current function up to the node $v$". 
   
+  
+
+  \section{Implementation}
+    In this section we describe briefly, how we implemented the thread-create analysis we designed in the previous chapter in the \gob\ analyzer and how we used it to improve the \texttt{threadId} analysis that already exists in the analyzer.\\
+    Similar to the \texttt{taintPartialContexts} analysis from \autoref{sec:implTaint}, we implement a new module \texttt{threadCreate} that implements the interface seen in \autoref{fig:analysis_interface}.
+
