@@ -20,7 +20,7 @@ sig
 
   val context : fundec -> D.t -> C.t
 
-  (* Function for the analysis of multithreaded programs *)
+  (* Functions for the analysis of multithreaded programs *)
   val threadenter : (D.t, C.t) ctx -> lval option -> varinfo -> exp list -> D.t list
   val threadspawn : (D.t, C.t) ctx -> lval option -> varinfo -> exp list -> (D.t, C.t) ctx -> D.t
 end

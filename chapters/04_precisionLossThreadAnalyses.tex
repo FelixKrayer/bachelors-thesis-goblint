@@ -21,6 +21,35 @@
   
 
   \section{Implementation}
-    In this section we describe briefly, how we implemented the thread-create analysis we designed in the previous chapter in the \gob\ analyzer and how we used it to improve the \texttt{threadId} analysis that already exists in the analyzer.\\
-    Similar to the \texttt{taintPartialContexts} analysis from \autoref{sec:implTaint}, we implement a new module \texttt{threadCreate} that implements the interface seen in \autoref{fig:analysis_interface}.
+    In this section we describe briefly, how we implemented the thread-create analysis from the previous chapter in \gob\ and how we used it to improve the \texttt{threadId} analysis that already exists in the analyzer.\\
+    Similar to the \texttt{taintPartialContexts} analysis from \autoref{sec:implTaint}, we implement a new module \texttt{threadCreate} that implements the interface seen in \autoref{fig:analysis_interface}. In the following we just discuss the implementation of the functions and modules required by the interface. Their meaning to the analyzer is explained in \autoref{sec:implTaint}.
+
+    \paragraph{Domain:}\mbox{}\\
+    The Domain \texttt{D} for this analysis only contains the two boolean values, where \texttt{false} stands for "definitely no thread was created" and \texttt{true} for "maybe a thread was created". For this \gob\ provides the \texttt{MayBool} domain implementing this notion with the corresponing ordering.\\
+    Similar to the taint analysis, this analysis does not contribute to the overall context of the analyzer, and thus we chose \texttt{Unit} for the module \texttt{C}.
+
+    \paragraph{The \texttt{startstate} function:}\mbox{}\\
+    We start analyses with the state that no thread was created and thus \texttt{startstate} returns \texttt{false}.
+
+    \paragraph{Transfer functions:}\mbox{}\\
+    Only actions that create a thread have an effect on the state of this analysis. Hence, all regular transfer functions propagate the state from before without any changes.
+
+    \paragraph{Functions for interprocedural analysis:}\mbox{}\\
+    For this analysis these functions are implemented as follows:
+    \begin{itemize}
+      \item \texttt{context}: With the context domain being \texttt{Unit} this function returns the unit element
+      \item \texttt{enter}: When entering a function we want to start with a state describing, that no thread was created by this function yet. Thus, the \texttt{enter} function returns \texttt{false}
+      \item \texttt{combine}: After returning from a function call, the state should be \texttt{true} if a thread was created by the caller before or by the callee. Therefore, the \texttt{combine} function joins the caller state and the callee return state with a logical \texttt{or}. 
+      \item \texttt{return}: This function propagates the state from before.
+      \item \texttt{special}: If the special function that is called here is a thread creating function, e.g., \texttt{pthread\_create()}, the state afterwards is \texttt{true}, since a thread has just been created. If the function is unknown, \texttt{true} is returned as well, because a thread might have been created. In all other cases, the previous state is propagated. 
+    \end{itemize}
+
+    \paragraph{Functions for the analysis of multithreaded programs:}\mbox{}\\
+    We implement the \texttt{threadspawn} function similar to the \texttt{startstate} function. When a thread is entered, the starting state for this thread is \texttt{false}, i.e., no thread has been created yet.\\
+    The \texttt{threadCreate} function returns \texttt{true}, because it created a thread and that is what the state is tracking.
+
+    \paragraph{The \texttt{query} function:}\mbox{}\\
+    To allow the new thread-create analysis to broadcast its information to other analyses we add a \texttt{MayThreadCreate} query. This query is answered by the thread-create analysis with the current state. Other analysis can send a \texttt{MayThreadCreate} query to gain the information, whether a thread has been created from the beginning of the current function up to the point where the query is sent.
+
+    %TODO: Impl in threadId analysis
 

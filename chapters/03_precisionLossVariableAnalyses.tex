@@ -71,7 +71,7 @@
         \item \texttt{query} to implement the query system of \gob. This allows an analysis to broadcast information to be used in analyses.
         \item \textit{Transfer functions} which define the abstract effects of actions (similar to $[\![A]\!]^{\#}$ from \autoref{chapter:background}).
         \item \textit{Functions for interprocedural analysis}
-        \item \textit{Function for the analysis of multithreaded programs}
+        \item \textit{Functions for the analysis of multithreaded programs}
       \end{itemize}
 
       For our taint analysis we create a new module implementing this interface.\\
@@ -133,7 +133,7 @@
           \end{itemize}
           is returned by the \texttt{special} function.
 
-      \subsubsection{Function for the analysis of multithreaded programs}
+      \subsubsection{Functions for the analysis of multithreaded programs}
         To be able to analyze multithreaded programs, \gob's analysis interface requires the following functions: \texttt{threadenter} to compute the startstate for the newly created thread and \texttt{threadspawn} which computes the effect of a thread creating instruction to the state of the creating thread.\\
         We implement the former of these two functions similarly to our \texttt{startstate} and \texttt{enter}. Thus, \texttt{threadenter} returns the empty set.\\
         To implement the other function, \texttt{threadspawn}, we consider how a thread creation effects the state of the creator. We note that for our notion of taintedness the only relevant effect is, that the thread creating function may write thread ID variables to which it receives a reference as an argument. Thus, this function uses the helper function \texttt{taint\_lval} defined in the "Transfer Functions" section to add possibly tainted \ac{lval}s to the state from before and returns the result.

@@ -2,8 +2,8 @@
 % Add the above to each chapter to make compiling the PDF easier in some editors.
 
 \chapter{Introduction}\label{chapter:introduction}
-  Abstract interpretation is a fascinating theory. When its principles are used in static analysis, one can proof certain properties about computer programs. Through the sound abstractions of abstract interpretation it is ensured that any proven property holds true for any possible execution of a program. The most interesting part of this system are the different ways by which states of a program can be abstracted and how these abstractions can be combined to gain various kinds of information about a program.\\
-  One project that is concerned with applying the principles of abstract interpretation to create a static analyzer is the \gob analyzer\parencite{goblintHome}. This analyzer is specialized in but not limited to finding concurrency bugs. These are some properties it aims to check:
+  Abstract interpretation is a fascinating theory. When its principles are used in static analysis, one can proof certain properties about computer programs. Through the sound abstractions of abstract interpretation it is ensured that any proven property holds true for all possible executions of a program. The most interesting part of this system are the different ways by which states of a program can be abstracted and how these abstractions can be combined to gain various kinds of information about a program.\\
+  The \gob\ analyzer is a project that applies the principles of abstract interpretation to create a static analyzer \parencite{goblintHome}. This analyzer is specialized in, but not limited to finding concurrency bugs. These are some properties it aims to check:
   \begin{itemize}
     \item Race Detection: Checking that accesses to shared memory never happens simultaneously.
     \item Assertions and Dead code: Checking whether specific logical expressions are definitely true at given points within the program. 
