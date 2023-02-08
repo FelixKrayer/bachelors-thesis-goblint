@@ -104,7 +104,20 @@
       \\
       <TODO: TIMINGS!!!>\\
       \begin{tabular}{l|l||r|r|r}
-        property & configuration & cputime all & cputime correct & \# Timeouts
+        \textit{property} & \textit{config.} & \textit{cputime all (s)} & \textit{cputime correct (s)} & \textit{\# Timeouts}\\
+        \hline
+        \texttt{unreach-call} & \textit{sens} & 1.940.000 & 67.600 & 1712 \\
+        & \textit{insens} & 1.910.000 & 64.000 & 1563 \\
+        & \textit{insens taint} & 1.920.000 & 65.800 & 1658 \\
+        \hline
+        \texttt{no-overflow} & \textit{sens} & & & \\
+        & \textit{insens} & & & \\
+        & \textit{insens taint} & & & \\
+        \hline
+        \texttt{no-data-race} & \textit{sens} & & & \\
+        & \textit{insens} & & & \\
+        & \textit{insens taint} & & & \\
+        \hline
       \end{tabular}
 
     \subsection{GNU Coreutils}\label{sec:benchCoreutils}

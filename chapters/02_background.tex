@@ -2,9 +2,10 @@
 % Add the above to each chapter to make compiling the PDF easier in some editors.
 
 \chapter{Background}\label{chapter:background}
-  % TODO
-  In this chapter we give ..
-  \parencite{cousot2021principles}
+  Abstract interpretation is the theory of approximating computer programs in a sound manner. That means that an abstraction might not be absolutely precise, but it definitely is not wrong, i.e., all possible concrete states and properties of a program are described by their abstraction.\\
+  An application of abstract interpretation is static analysis. As Rival~\parencite{rival2020introduction} defines it, static analysis is "[...]an automatic technique that approximates in a conservative manner semantic properties of programs before their execution". This means that the program is analyzed just by the given source code without execution. The goal is to prove certain properties about the program in a "sound" manner, i.e., any property that is proven to hold actually does hold. However, from failing to prove a property one cannot conclude that the given property does not hold.\\
+  In order to prove properties, e.g. finding that a program does not contain races or identifying dead code, we need to gain information about the program. This is done by performing various kinds of analyses. We will focus on flow sensitive analyses in this thesis, i.e., analyses which find properties of the program dependent on the location within it. We will introduce a syntax to formalize flow sensitive analyses in the following sections. This formalization approach is heavily based on \parencite{apinis2012side}
+  \parencite{cousot2021principles}.
 
 \begin{figure}
   \centering
@@ -28,13 +29,9 @@
   \caption{Example program (left) and corresponding CFG (right)}
   \label{fig:example_cfg}
 \end{figure}
-
-  \section{Static Analysis}
-    Static analysis is defined by Rival~\parencite{rival2020introduction} as "[...]an automatic technique that approximates in a conservative manner semantic properties of programs before their execution". This means that the program is analyzed just by the given source code without execution. The goal is to prove certain properties about the program in a "sound" manner, i.e., any property that is proven to hold actually does hold. However, from failing to prove a property one cannot conclude that the given property does not hold.\\
-    In order to prove properties, e.g. finding that a program does not contain races or identifying dead code, we need to gain information about the program. This is done by performing various kinds of analyses. We will focus on flow sensitive analyses from now on, i.e., analyses which find properties of the program dependent on the location within it. We will introduce a syntax to formalize flow sensitive analyses in the following sections. This formalization approach is heavily based on \parencite{apinis2012side}.
   
   \section{Flow sensitive analysis}
-    As noted above flow sensitive analyses find properties of the program dependent on the point within the program. Expressed differently this means a flow sensitive analysis will find an overapproximation of states the program may be in for any given point within the program, from now on called "program point". This state can describe many things dependent on the analysis performed.\\
+    As noted above flow sensitive analyses aim to find properties of the program dependent on the point within the program. Expressed differently this means a flow sensitive analysis will find an overapproximation of states the program may be in for any given point within the program, from now on called "program point". This state can describe many things dependent on the analysis performed.\\
     First we define what a program point is: Consider a \ac{CFG}, where nodes represent points between instructions within the program. Edges are labeled with instructions or checks (from now on collectively called "actions") and describe the transitions between these points (see example \autoref{fig:example_cfg}). Then any node on this \ac{CFG} is what we call a program point.\\
     Concretely let $N$ be the set of all program points. Furthermore, let $\mathbb{D}$ be a domain containing abstract states describing concrete states of the program. This means that some $d \in \mathbb{D}$ can describe many states the program can be in. A concretization function $\gamma: \mathbb{D} \rightarrow 2^{\mathcal{C}}$ can be defined to extract the set of concrete states which are described by an abstract state. Here $\mathcal{C}$ is the set of all possible concrete states.\\ 
     Then an analysis is expected to find a mapping $\eta: N \rightarrow \mathbb{D}$ which maps program points to abstract states describing that location within the program, i.e., for $[v] \in N$, $\eta\ [v]$ should be an abstract state describing all possible states (and possibly more) the program can be in at program point $[v]$.\\

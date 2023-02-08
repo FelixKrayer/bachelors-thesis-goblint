@@ -5,16 +5,21 @@
 % local traces
   To (((Something))) M. Schwarz et al. \parencite{schwarz2023clustered}.
   \section{Theory}
-  In Chapter 6 of their paper \parencite{schwarz2023clustered} they propose an analysis that identifies threads by their creation history. Among other things, this analysis helps to identify which actions may or may not happen in parallel.\\
-  As mentioned, threads are identified by their creation history, which is used as an ID to identify different threads. This history is a sequence of create edges starting with $\textsf{main}$. 
-  To prevent such a history to grow to infinity, they define the notion of non-unique thread IDs which may identify multiple threads each.\\
+  In Chapter 6 of their paper \parencite{schwarz2023clustered} they propose an analysis that identifies threads by their creation history. Among other things, this analysis helps to identify which threads are unique and which actions may or may not happen in parallel.\\
+  As mentioned, threads are identified by their creation history, which is used as an ID to identify different threads. This history is a sequence of create edges starting with $\textsf{main}$. To prevent such a history to grow to infinity, they define the notion of non-unique thread IDs which may identify multiple threads each.\\
   Formally, the set of possible abstract thread IDs $\mathcal{I}^{\#}$ is $(\textsf{main}\cdot\mathcal{P}^*) \times 2^{\mathcal{P}}$, where $\mathcal{P}$ is the set of create edges and $\mathcal{P}^*$ a sequence of such edges. $\langle u, f \rangle \in \mathcal{P}$ refers to an outgoing edge from program point $u$ which creates a thread starting at $f$.
   In this notion, IDs of the form $(i, \emptyset) \in \mathcal{I}^{\#}$ are unique, while $(i, s) \in \mathcal{I}^{\#}$ are not unique if $s \neq \emptyset$.\\
   To better provide a better understanding of these definitions we explain them with the following example:\\
-  %TODO: Example
+  %TODO: Example???
   \\
+  As mentioned, these abstract thread IDs are found by a dedicated thread ID analysis. In order to work correctly, this analysis needs to track the current thread ID as well as a set of create edges already encountered. Thus, the abstract domain for this analysis is $\mathbb{D}_\textsf{tID} = (\mathcal{I}^{\#} \times 2^{\mathcal{P}})$. An element $(id, es)$ of this domain is the product of the current thread ID $id$ and the set of encountered create edges $es$.\\
+  The main part of the analysis now works as follows: Assume a thread-create edge $(u, create(f), v)$ is encountered with a state $(id, es)$. When the $id$ is already non-unique, the new thread is identified with a (possibly new) non-unique ID. In the other case $id$ is unique, i.e., $id = (i, \emptyset)$. Then the analysis checks whether the currently encountered edge was already encountered before, i.e., if it is present in the set of encountered edges $es$. If not, the new thread is identified with a new unique ID that is created by appending the current create edge to the first part of $id = (i, \emptyset)$. Otherwise, the new thread is identified with a non-unique ID.\\
+  % TODO: Formally
   \\
-  % TODO: Precision Loss
+  As of now the thread ID analysis is always run context sensitively, i.e., $\mathbb{C}_\textsf{tID} = \mathbb{D}_\textsf{tID}$ and $\textsf{context}^{\#}_\textsf{tID}\ D = \textsf{enter}^{\#}_\textsf{tID}\ D$. Performing it context insensitively is not practical. The reason for that is leads to cases where a least upper bound of two states $(id_1, es_1)$ and $(id_2, es_2)$ has to be computed. Since abstract IDs from $\mathcal{I}^{\#}$ are not reasonably comparable, this leads to a notion of "unknown thread ID" or "any possible thread ID" which we want to avoid.\\
+  It is much more reasonable to run the thread ID analysis partially context sensitively, where contexts are differentiated with respect to the current $id$ but not the set of encountered create edges $es$. Computing the least upper bound of sets of encountered create edges is reasonably possible by taking the union of the sets. With these insights we can perform the thread ID analysis partially context sensitively with
+  \[\mathbb{C}_\textsf{tID} = \mathcal{I}^{\#} \text{ and } \textsf{context}^{\#}_\textsf{tID}\ (id, es) = id\]
+  When we now run this partially context-sensitive analysis, it is possible to encounter cases where precision is lost similarly to how we described it in \autoref{sec:precisionLoss}. We exemplify this with an example:
   \\
   We propose a "thread-create" analysis that checks for each function, whether a thread is possibly created between the entry to it and the return. Note that it does not matter, if a thread is created in the function itself or in another function which the function called. The domain we use for this analysis is the set of boolean values $\mathbb{D}_\textsf{tc} = \{\textsf{true}, \textsf{false}\}$. The analysis tracks whether a function \textit{may} create a thread. Thus, we encode uncertainty, i.e., "a thread \textit{may} have been created" with $\textsf{true}$. Therefore, the state at some program point $\eta_\textsf{tc}\ [v,\bullet]$ answers the question "\textit{May} a thread have been created since the entry of the current function up to the node $v$". 
   
@@ -49,7 +54,9 @@
     The \texttt{threadCreate} function returns \texttt{true}, because it created a thread and that is what the state is tracking.
 
     \paragraph{The \texttt{query} function:}\mbox{}\\
-    To allow the new thread-create analysis to broadcast its information to other analyses we add a \texttt{MayThreadCreate} query. This query is answered by the thread-create analysis with the current state. Other analysis can send a \texttt{MayThreadCreate} query to gain the information, whether a thread has been created from the beginning of the current function up to the point where the query is sent.
-
+    To allow the new thread-create analysis to broadcast its information to other analyses we add a \texttt{MayThreadCreate} query. This query is answered by the thread-create analysis with the current state. Other analysis can send a \texttt{MayThreadCreate} query to gain the information, whether a thread has been created from the beginning of the current function up to the point where the query is sent.\\
+    \\
+    \\
+    \paragraph{Improving the \texttt{thread} analysis}
     %TODO: Impl in threadId analysis
 
