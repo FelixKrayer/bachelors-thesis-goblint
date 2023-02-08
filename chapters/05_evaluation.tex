@@ -102,7 +102,10 @@
       As for the results of the \texttt{no-overflow} property, it seems like the usage of the taint analysis leads to less precise results. This property was proven for 17 fewer programs, when using the \textit{insens taint} configuration instead of the \textit{insens} configuration. In fact these results helped us find a bug in our implementation. This bug is now fixed and the \texttt{no-overflow} property can now be proven for these 17 programs with the \textit{insens taint} configuration. In conclusion however, we cannot say that the taint analysis provided an improvement for proving the \texttt{no-overflow} property.\\
       Similarly, the \textit{insens taint} configuration is exactly as precise as the \texttt{insens} configuration for the \texttt{no-data-race} property. The reason, that the \textit{sens} configuration proved the property for one fewer program than both of the other configurations is a timeout. Considering this, we come to the conclusion, that for this property all three configurations are equally precise.\\
       \\
-      <TODO: TIMINGS!!!>
+      <TODO: TIMINGS!!!>\\
+      \begin{tabular}{l|l||r|r|r}
+        property & configuration & cputime all & cputime correct & \# Timeouts
+      \end{tabular}
 
     \subsection{GNU Coreutils}\label{sec:benchCoreutils}
       We also benchmark the improved \texttt{base} analysis with another approach. For this we use modified versions of C programs from the GNU Core Utilities "coreutils" \parencite{gnuCoreutils}. These programs implement "the basic file, shell and text manipulation utilities of the GNU operating system. These are the core utilities which are expected to exist on every operating system."\parencite{gnuCoreutils}\\
