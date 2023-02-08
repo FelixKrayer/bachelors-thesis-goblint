@@ -26,38 +26,14 @@
       For each of these properties, we perform three benchmark runs with different configurations on each program for which it is specified that the property holds.
       The three configurations we use for the benchmark runs are:
       \begin{itemize}
-        \item \textit{sens}: The \texttt{base} analysis is performed context-sensitively.
-        \item \textit{insens}: The \texttt{base} analysis is performed context-insensitively.
-        \item \textit{insens taint}: The \texttt{base} analysis is performed context-insensitively with the improvements of the taint analysis.
+        \item \textit{sens}: The \texttt{base} analysis is performed context sensitively.
+        \item \textit{insens}: The \texttt{base} analysis is performed context insensitively.
+        \item \textit{insens taint}: The \texttt{base} analysis is performed context insensitively with the improvements of the taint analysis.
       \end{itemize}
       During each benchmark run with a certain configuration we save different kinds of information to compare later. The most important of which are the computation time per program and the total number of programs, for which the property to prove was proven.\\
       We first investigate the precision. For this we compare the number of programs for which the property was proven per configuration and property: The raw numbers can be found in \autoref{tbl:resultSVbench}, while the graph in \autoref{fig:resultSVbench} shows a visualization of the results.\\
-
-      \begin{table}
-        \centering
-        \begin{tabular}{l|l||r|r||r|r|r}
-          %\multicolumn{1}{l|}{property} & \multicolumn{1}{l||}{config} & \multicolumn{1}{l|}{\# proven} & \multicolumn{1}{l||}{\# total} & \multicolumn{1}{l|}{\% loss} & \multicolumn{1}{l|}{\% recovered} \\
-          \textit{property} & \textit{config.} & \textit{\# proven} & \textit{\# total} & \textit{\# loss by} & \textit{\# recovered} & \textit{\% recovered}\\
-            &  &  &  & \textit{insens} & & \textit{of loss}\\
-          \hline
-          \texttt{unreach-call} & \textit{sens} & 1925 & 10173 & 31 & 20 & 64.52\\
-          & \textit{insens} & 1894 & & & & \\
-          & \textit{insens taint} & 1914 & & & & \\
-          \hline
-          \texttt{no-overflow} & \textit{sens} & 3456 & 8474 & 16 & -17 & -43.75\\
-          & \textit{insens} & 3440 & & & & \\
-          & \textit{insens taint} & 3433 & & & & \\
-          \hline
-          \texttt{no-data-race} & \textit{sens} & 671 & 903 & -1 & 0 & 0.00\\
-          & \textit{insens} & 672 & & & & \\
-          & \textit{insens taint} & 672 & & & & \\
-          \hline
-        \end{tabular}
-        \caption{Table showing the results of the SV-Benchmarks}
-        \label{tbl:resultSVbench}
-      \end{table}
-
-      \begin{figure}
+ 
+      \begin{figure}[!ht]
         \centering
         \begin{tikzpicture}
           \begin{axis}[
@@ -94,10 +70,35 @@
         \label{fig:resultSVbench}
       \end{figure}
 
+      \begin{table}
+        \centering
+        \begin{tabular}{l|l||r|r||r|r|r}
+          %\multicolumn{1}{l|}{property} & \multicolumn{1}{l||}{config} & \multicolumn{1}{l|}{\# proven} & \multicolumn{1}{l||}{\# total} & \multicolumn{1}{l|}{\% loss} & \multicolumn{1}{l|}{\% recovered} \\
+          \textit{property} & \textit{config.} & \textit{\# proven} & \textit{\# total} & \textit{\# loss by} & \textit{\# recovered} & \textit{\% recovered}\\
+            &  &  &  & \textit{insens} & & \textit{of loss}\\
+          \hline
+          \texttt{unreach-call} & \textit{sens} & 1925 & 10173 & 31 & 20 & 64.52\\
+          & \textit{insens} & 1894 & & & & \\
+          & \textit{insens taint} & 1914 & & & & \\
+          \hline
+          \texttt{no-overflow} & \textit{sens} & 3456 & 8474 & 16 & -17 & -43.75\\
+          & \textit{insens} & 3440 & & & & \\
+          & \textit{insens taint} & 3433 & & & & \\
+          \hline
+          \texttt{no-data-race} & \textit{sens} & 671 & 903 & -1 & 0 & 0.00\\
+          & \textit{insens} & 672 & & & & \\
+          & \textit{insens taint} & 672 & & & & \\
+          \hline
+        \end{tabular}
+        \caption{Table showing the results of the SV-Benchmarks}
+        \label{tbl:resultSVbench}
+      \end{table}
+
+     
+
       As we can see in \autoref{fig:resultSVbench}, there is in fact not a big difference between the three configurations for each property. Our interpretation of this result is, that the choice between our three configurations only has a small effect on the precision of \gob when analyzing real world programs. In other words this means, that not a lot of precision is lost by performing the \texttt{base} analysis context insensitively. The taint analysis can only recover lost precision, so little over all precision loss means, that the taint analysis can only provide little over all improvement.\\
       \\
-      We now take a closer look at \autoref{tbl:resultSVbench}. First we talk about the \texttt{unreach call} property:
-      We see, that with the \textit{insens} configuration, the analyzer was able to proof the property 31 times fewer than with the \textit{sens} configuration. However, it proved the property 20 times more often with the \textit{insens taint} configuration compared to the \textit{insens} configuration. This leads us to the conclusion, that for this property the taint analysis helped to recover about 65\% of the precision lost.\\
+      We now take a closer look at \autoref{tbl:resultSVbench}. First we talk about the \texttt{unreach-call} property: We see, that with the \textit{insens} configuration, the analyzer was able to proof the property 31 times fewer than with the \textit{sens} configuration. However, it proved the property 20 times more often with the \textit{insens taint} configuration compared to the \textit{insens} configuration. This leads us to the conclusion, that for this property the taint analysis helped to recover about 65\% of the precision lost.\\
       As for the results of the \texttt{no-overflow} property, it seems like the usage of the taint analysis leads to less precise results. This property was proven for 17 fewer programs, when using the \textit{insens taint} configuration instead of the \textit{insens} configuration. In fact these results helped us find a bug in our implementation. This bug is now fixed and the \texttt{no-overflow} property can now be proven for these 17 programs with the \textit{insens taint} configuration. In conclusion however, we cannot say that the taint analysis provided an improvement for proving the \texttt{no-overflow} property.\\
       Similarly, the \textit{insens taint} configuration is exactly as precise as the \texttt{insens} configuration for the \texttt{no-data-race} property. The reason, that the \textit{sens} configuration proved the property for one fewer program than both of the other configurations is a timeout. Considering this, we come to the conclusion, that for this property all three configurations are equally precise.\\
       \\
@@ -162,8 +163,8 @@
   \section{Benchmarking the improved \texttt{threadId} analysis}
     We only performed a partial benchmark for our improvement of the \texttt{threadId} analysis using the thread-create analysis. For this we again used the GNU coreutil programs, which we described in \autoref{sec:benchCoreutils}. This time however, instead of comparing the number of correctly proven assertions, we compare the number of race conditions, the \gob\ analyzer finds in each program with each configuration. We compared these configurations:
     \begin{itemize}
-      \item \textit{sens}: The \texttt{threadId} analysis is performed context-sensitively.
-      \item \textit{part-sens}: The \texttt{threadId} analysis is performed partially context-sensitively, i.e., only sensitive with respect to the thread ID but not with respect to the set of encountered create edges. Concretely, the option \texttt{ana.thread.context.createEdges} we added is disabled in this configuration.
+      \item \textit{sens}: The \texttt{threadId} analysis is performed context sensitively.
+      \item \textit{part-sens}: The \texttt{threadId} analysis is performed partially context sensitively, i.e., only sensitive with respect to the thread ID but not with respect to the set of encountered create edges. Concretely, the option \texttt{ana.thread.context.createEdges} we added is disabled in this configuration.
       \item \textit{part-sens taint}: Same configuration like \textit{part-sens} but with the improvements of the thread-create analysis enabled.
     \end{itemize}
     The results of this benchmark are as follows: For each of the coreutil programs, the analyzer finds between 5 and 8 race conditions. However, there is no difference between the three configurations. This means that for each program, the number of race conditions found is the same irregardless of the configuration chosen. This means that with this benchmarking setup we do not record any precision loss that results from partial context-sensitivity. Since no precision is lost, we cannot see, if the thread-create analysis provides an improvement.

@@ -80,7 +80,7 @@
     For $\textsf{combine}^{\#}_\textsf{v}$ the local part of the caller is kept, but it is updated with the global part of the callee return state. This is done, because the latter contains the updated information about global variables after the procedure call.\\
 
   \section{Context sensitivity}
-    In the previous chapter we approached the analysis of procedures by analyzing them only once with an abstract start state describing all possible concrete states the procedure could start with. We call this behavior "context insensitive" as the procedure is analyzed without differentiating between different states with which it is called.\\
+    In the previous chapter we approached the analysis of procedures by analyzing them only once with an abstract start state describing all possible concrete states the procedure could start with. We call this behavior "context-insensitive" as the procedure is analyzed without differentiating between different states with which it is called.\\
     This is not very precise as we will exemplify by applying the values-of-variables analysis to the program in \autoref{fig:example_ctx_sens}. We ignore the marked lines of the program for now.\\
     The procedure \texttt{incr()} is called twice: Once with $a = 1$ in \autoref{code:incr1} and once with $a = -3$ in \autoref{code:incr2}. This leads to two constraints for node $[s_{incr}]$: 
       \[\eta_\textsf{v}\ [s_{incr}] \sqsupseteq_\textsf{v} \textsf{enter}^{\#}_\textsf{v}\ \eta_\textsf{v}\ [v_2] = \{a \rightarrow \{1\} \} \]
@@ -139,7 +139,7 @@
     \end{figure}
 
   \section{Partial context sensitivity}\label{sec:partialCtxSens}
-    While the context-sensitive approach from the previous section might be very precise, it can be quite costly in terms of computation time. To reach a middle ground between a context insensitive and a fully context-sensitive analysis, we change the approach so that contexts are different from the entry state of a call. With this we can group entry states by contexts to analyze a procedure multiple times. This time we group not once per individual entry state, but once per group of entry states.\\
+    While the context-sensitive approach from the previous section might be very precise, it can be quite costly in terms of computation time. To reach a middle ground between a context-insensitive and a fully context-sensitive analysis, we change the approach so that contexts are different from the entry state of a call. With this we can group entry states by contexts to analyze a procedure multiple times. This time we group not once per individual entry state, but once per group of entry states.\\
     Let $\mathbb{C}$ be our context-domain. Instead of adding a state from the value-domain $\mathbb{D}$ to the program points $N$ we add an element from the context-domain. Thereby we change the definition of the mapping we want to compute as follows: We now have $\eta: (N \times \mathbb{C}) \rightarrow \mathbb{D}$.\\
     We also define a new function $\textsf{context}^{\#}: \mathbb{D} \rightarrow \mathbb{C}$ here. This function will calculate the context when entering a procedure. Additionally, the constraints for $\textsf{enter}^{\#}$ and $\textsf{combine}^{\#}$ are changed as follows:
     \[\eta\ [s_f, \textsf{context}^{\#}\ (\eta\ [u, c])] \sqsupseteq \textsf{enter}^{\#}\ (\eta\ [u, c]) \]
@@ -159,6 +159,6 @@
     \\
     We clarify the source of the precision loss mentioned above with an example: For this we once again consider the example program \autoref{fig:example_ctx_sens}. This time we take the marked lines into account. When the program is analyzed context insensitively, not only does the state at the start node for \texttt{incr()} $s_{incr}$ represent two possible values for the global variable \texttt{a}, but also for \texttt{c}. Therefore, the state for this node is
     \[\eta_\textsf{v}\ [s_{incr}, \bullet] = \{a \rightarrow \{-3, 1\}, c \rightarrow \{-10, 10\}\} \]
-    Even though the variable \texttt{c} is never changed within \texttt{incr()}, the mapping $c \rightarrow \{-10, 10\}$ is still copied into the caller state when combining the states for node $v_6$. Thus, the information gained by the context insensitive values-of-variables analysis does not suffice to determine the assertion in \autoref{code:assert_c} to hold. This loss of precision could easily be avoided if we had some idea which global variables are definitely not changed by a procedure call.
+    Even though the variable \texttt{c} is never changed within \texttt{incr()}, the mapping $c \rightarrow \{-10, 10\}$ is still copied into the caller state when combining the states for node $v_6$. Thus, the information gained by the context-insensitive values-of-variables analysis does not suffice to determine the assertion in \autoref{code:assert_c} to hold. This loss of precision could easily be avoided if we had some idea which global variables are definitely not changed by a procedure call.
 
 
