@@ -103,20 +103,21 @@
       Similarly, the \textit{insens taint} configuration is exactly as precise as the \texttt{insens} configuration for the \texttt{no-data-race} property. The reason, that the \textit{sens} configuration proved the property for one fewer program than both of the other configurations is a timeout. Considering this, we come to the conclusion, that for this property all three configurations are equally precise.\\
       \\
       <TODO: TIMINGS!!!>\\
-      \begin{tabular}{l|l||r|r|r}
-        \textit{property} & \textit{config.} & \textit{cputime all (s)} & \textit{cputime correct (s)} & \textit{\# Timeouts}\\
+      \begin{tabular}{l|l||r|r|r|r}
+        \textit{property} & \textit{config.} & \textit{avg. cputime} & \textit{avg. cputime} & \textit{\# Timeouts} & \textit{\# Errors} \\
+        & & \textit{all tasks (s)} & \textit{no errors (s)} & & \\
         \hline
-        \texttt{unreach-call} & \textit{sens} & 1.940.000 & 67.600 & 1712 \\
-        & \textit{insens} & 1.910.000 & 64.000 & 1563 \\
-        & \textit{insens taint} & 1.920.000 & 65.800 & 1658 \\
+        \texttt{unreach-call} & \textit{sens} & 191 & 30.8 & 1712 & 1934 \\
+        & \textit{insens} & 188 & 28.1 & 1563 & 1799 \\
+        & \textit{insens taint} & 188 & 31.2 & 1658 & 1908 \\
         \hline
-        \texttt{no-overflow} & \textit{sens} & & & \\
-        & \textit{insens} & & & \\
-        & \textit{insens taint} & & & \\
+        \texttt{no-overflow} & \textit{sens} & 7.51 & 0.722 & 51 & 130 \\
+        & \textit{insens} & 5.25 & 0.627 & 42 & 43 \\
+        & \textit{insens taint} & 5.37 & 0.694 & 44 & 45\\
         \hline
-        \texttt{no-data-race} & \textit{sens} & & & \\
-        & \textit{insens} & & & \\
-        & \textit{insens taint} & & & \\
+        \texttt{no-data-race} & \textit{sens} & 1.51 & 0.510 & 1 & 1\\
+        & \textit{insens} & 0.517 & 0.517 & 0 & 0 \\
+        & \textit{insens taint} & 0.525 & 0.525 & 0 & 0 \\
         \hline
       \end{tabular}
 
@@ -185,6 +186,6 @@
     \end{itemize}
     The results of this benchmark are as follows: For each of the coreutil programs, the analyzer finds between 5 and 8 race conditions. However, there is no difference between the three configurations. This means that for each program, the number of race conditions found is the same irregardless of the configuration chosen. This means that with this benchmarking setup we do not record any precision loss that results from partial context-sensitivity. Since no precision is lost, we cannot see, if the thread-create analysis provides an improvement.
     \\
-    In conclusion there definitely exist cases, where the running the \texttt{threadId} partially context-sensitive leads to precision loss, which the thread-create analysis can reduce. We have shown this by adding a regression test of one such case to the \gob\ regression tests.\\
+    In conclusion there definitely exist cases, where the running the \texttt{threadId} partially context-sensitive leads to precision loss, which the thread-create analysis can reduce. We have shown this by adding a regression test of one such case to the \gob\ regression tests, similar to the example in \autoref{fig:example_thread}.\\
     However, such cases may only exist very rarely in real world programs.\\
     It has to be noted that our benchmark for this analysis was only very small in scale. More extensive benchmarks are necessary to make a more meaningful statement. The next step in the future is to perform a benchmark run of the SV-Benchmarks' \texttt{unreach-call} property as described in \autoref{sec:benchSVbench}.
