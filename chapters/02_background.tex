@@ -31,7 +31,7 @@
   
   \section{Flow sensitive analysis}
     As noted above flow sensitive analyses aim to find properties of the program dependent on the point within the program. Expressed differently this means a flow sensitive analysis will find an overapproximation of states the program may be in for any given point within the program, from now on called "program point". This state can describe many things dependent on the analysis performed.\\
-    First we define what a program point is: Consider a \ac{CFG}, where nodes represent points between instructions within the program. Edges are labeled with instructions or checks (from now on collectively called "actions") and describe the transitions between these points (see example \autoref{fig:example_cfg}). Then any node on this \ac{CFG} is what we call a program point.\\
+    First we define what a program point is: Consider a CFG (Control Flow Graph), where nodes represent points between instructions within the program. Edges are labeled with instructions or checks (from now on collectively called "actions") and describe the transitions between these points (see example \autoref{fig:example_cfg}). Then any node on this CFG is what we call a program point.\\
     Concretely let $N$ be the set of all program points. Furthermore, let $\mathbb{D}$ be a domain containing abstract states describing concrete states of the program. This means that some $d \in \mathbb{D}$ can describe many states the program can be in. A concretization function $\gamma: \mathbb{D} \rightarrow 2^{\mathcal{C}}$ can be defined to extract the set of concrete states which are described by an abstract state. Here $\mathcal{C}$ is the set of all possible concrete states.\\ 
     Then an analysis is expected to find a mapping $\eta: N \rightarrow \mathbb{D}$ which maps program points to abstract states describing that location within the program, i.e., for $[v] \in N$, $\eta\ [v]$ should be an abstract state describing all possible states (and possibly more) the program can be in at program point $[v]$.\\
     \\
@@ -43,7 +43,7 @@
 
   \section{Constraint systems}
     We now formulate a way in which we can describe an analysis in the form of constraints. For this we need a partial ordering $\sqsubseteq$ on the domain $\mathbb{D}$.\\
-    Then we create a system of constraints which can be solved for a solution. Consider the edges $(u, A, v)$ of the \ac{CFG}, where each edge denotes a transition from program point $[u]$ to program point $[v]$ via the action $A$. Now let each of these edges give rise to a constraint
+    Then we create a system of constraints which can be solved for a solution. Consider the edges $(u, A, v)$ of the CFG, where each edge denotes a transition from program point $[u]$ to program point $[v]$ via the action $A$. Now let each of these edges give rise to a constraint
     \[\eta\ [v] \sqsupseteq [\![A]\!]^{\#}\ (\eta\ [u])\]
     where $[\![A]\!]^{\#}$ denotes the abstract effect of the action $A$ defining our analysis. In addition, we need a start state. This is given by $\textsf{init}^{\#}: \mathbb{D}$ which is defined depending on the analysis. This gives rise to the start constraint $\eta\ [s] \sqsupseteq \textsf{init}^{\#}$ for the starting point of the program $[s] \in N$.\\
     \\
@@ -63,7 +63,7 @@
     The idea is to give procedures their own starting states and analyze them similarly as we have done before. The final state of the called procedure is then used to be combined back into the state of the caller before the call. Formalized for an edge $(u, f();, v)$ this looks as follows:
     \[\eta\ [s_f] \sqsupseteq \textsf{enter}^{\#}\ (\eta\ [u]) \]
     \[\eta\ [v] \sqsupseteq  \textsf{combine}^{\#}\ ((\eta\ [u]), (\eta\ [e_f])) \]
-    where $[s_f]$ and $[e_f]$ are the start and end node of the \ac{CFG} for procedure $f()$. The functions $\textsf{combine}^{\#}: \mathbb{D} \times \mathbb{D} \rightarrow \mathbb{D}$ and $\textsf{enter}^{\#}: \mathbb{D} \rightarrow \mathbb{D}$ are defined by the analysis. $\textsf{enter}^{\#}$ handles computing the start state for the procedure $f()$, while $\textsf{combine}^{\#}$ describes in what way the caller state and the end state of the callee are merged after the call.\\
+    where $[s_f]$ and $[e_f]$ are the start and end node of the CFG for procedure $f()$. The functions $\textsf{combine}^{\#}: \mathbb{D} \times \mathbb{D} \rightarrow \mathbb{D}$ and $\textsf{enter}^{\#}: \mathbb{D} \rightarrow \mathbb{D}$ are defined by the analysis. $\textsf{enter}^{\#}$ handles computing the start state for the procedure $f()$, while $\textsf{combine}^{\#}$ describes in what way the caller state and the end state of the callee are merged after the call.\\
     It is worth mentioning at this point that even though a procedure can be called from multiple points within the program we still only analyze the procedure once. For $n$ procedure calls $(u_n, f();, v_n)$ we get $n$ constraints for $[s_f]$: $\eta\ [s_f] \sqsupseteq \textsf{enter}^{\#}\ (\eta\ [u_n])$. We can express this differently in a single constraint as follows:
     \[\eta\ [s_f] \sqsupseteq \bigsqcup \{ d \exists (u_n, f();, v_n) \in Edges:\ \textsf{enter}^{\#}\ (\eta\ [u_n]) = d \}\]
     where $\bigsqcup$ is the least upper bound, i.e., the least $d \in \mathbb{D}$ according to the ordering $\sqsubseteq$ that is ordered above all of its argument elements.\\
@@ -131,7 +131,7 @@
           \draw[->] (0) -- node[midway, xshift=28pt, yshift=11pt, pos=1] {a = a + 1;} (1);
         \end{tikzpicture}
       \end{subfigure}
-      \caption{Example program (left) and corresponding CFGs for \texttt{main} (middle) and \texttt{incr} (right)}
+      \caption{Example program (left) and corresponding CFGs for \texttt{main} (middle) and \texttt{incr} (right). The asserts in \autoref{code:assert_a} and \autoref{code:assert_c} are proven with a context-sensitive values-of-variables analysis. However, a context-insensitive values-of-variables analysis fails to prove both.}
       \label{fig:example_ctx_sens}
     \end{figure}
 

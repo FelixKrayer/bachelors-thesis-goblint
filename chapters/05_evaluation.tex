@@ -31,7 +31,7 @@
         \item \textit{insens taint}: The \texttt{base} analysis is performed context insensitively with the improvements of the taint analysis.
       \end{itemize}
       During each benchmark run with a certain configuration we save different kinds of information to compare later. The most important of which are the computation time per program and the total number of programs, for which the property to prove was proven.\\
-      We first investigate the precision. For this we compare the number of programs for which the property was proven per configuration and property: The raw numbers can be found in \autoref{tbl:resultSVbench}, while the graph in \autoref{fig:resultSVbench} shows a visualization of the results.\\
+      We first investigate the precision. For this we compare the number of programs for which the property was proven per configuration and property: The raw numbers can be found in \autoref{fig:resultSVbenchTable}, while the graph in \autoref{fig:resultSVbench} shows a visualization of the results.\\
  
       \begin{figure}[!ht]
         \centering
@@ -70,12 +70,11 @@
         \label{fig:resultSVbench}
       \end{figure}
 
-      \begin{table}
+      \begin{figure}
         \centering
         \begin{tabular}{l|l||r|r||r|r|r}
-          %\multicolumn{1}{l|}{property} & \multicolumn{1}{l||}{config} & \multicolumn{1}{l|}{\# proven} & \multicolumn{1}{l||}{\# total} & \multicolumn{1}{l|}{\% loss} & \multicolumn{1}{l|}{\% recovered} \\
           \textit{property} & \textit{config.} & \textit{\# proven} & \textit{\# total} & \textit{\# loss by} & \textit{\# recovered} & \textit{\% recovered}\\
-            &  &  &  & \textit{insens} & & \textit{of loss}\\
+            &  & \textit{tasks} & \textit{tasks} & \textit{insens} & & \textit{of loss}\\
           \hline
           \texttt{unreach-call} & \textit{sens} & 1925 & 10173 & 31 & 20 & 64.52\\
           & \textit{insens} & 1894 & & & & \\
@@ -90,36 +89,42 @@
           & \textit{insens taint} & 672 & & & & \\
           \hline
         \end{tabular}
-        \caption{Table showing the results of the SV-Benchmarks}
-        \label{tbl:resultSVbench}
-      \end{table}
-
-     
+        \caption{Table showing the results of the SV-Benchmarks.}
+        \label{fig:resultSVbenchTable}
+      \end{figure}
 
       As we can see in \autoref{fig:resultSVbench}, there is in fact not a big difference between the three configurations for each property. Our interpretation of this result is, that the choice between our three configurations only has a small effect on the precision of \gob when analyzing real world programs. In other words this means, that not a lot of precision is lost by performing the \texttt{base} analysis context insensitively. The taint analysis can only recover lost precision, so little over all precision loss means, that the taint analysis can only provide little over all improvement.\\
       \\
-      We now take a closer look at \autoref{tbl:resultSVbench}. First we talk about the \texttt{unreach-call} property: We see, that with the \textit{insens} configuration, the analyzer was able to proof the property 31 times fewer than with the \textit{sens} configuration. However, it proved the property 20 times more often with the \textit{insens taint} configuration compared to the \textit{insens} configuration. This leads us to the conclusion, that for this property the taint analysis helped to recover about 65\% of the precision lost.\\
-      As for the results of the \texttt{no-overflow} property, it seems like the usage of the taint analysis leads to less precise results. This property was proven for 17 fewer programs, when using the \textit{insens taint} configuration instead of the \textit{insens} configuration. In fact these results helped us find a bug in our implementation. This bug is now fixed and the \texttt{no-overflow} property can now be proven for these 17 programs with the \textit{insens taint} configuration. In conclusion however, we cannot say that the taint analysis provided an improvement for proving the \texttt{no-overflow} property.\\
-      Similarly, the \textit{insens taint} configuration is exactly as precise as the \texttt{insens} configuration for the \texttt{no-data-race} property. The reason, that the \textit{sens} configuration proved the property for one fewer program than both of the other configurations is a timeout. Considering this, we come to the conclusion, that for this property all three configurations are equally precise.\\
+      We now take a closer look at \autoref{fig:resultSVbenchTable}. We first investigate the results for the \texttt{unreach-call} property: We see, that with the \textit{insens} configuration, the analyzer was able to proof the property 31 times fewer than with the \textit{sens} configuration. However, it proved the property 20 times more often with the \textit{insens taint} configuration compared to the \textit{insens} configuration. This leads us to the conclusion, that for this property the taint analysis helped to recover about 65\% of the precision lost.\\
+      As for the results of the \texttt{no-overflow} property, it seems like the usage of the taint analysis leads to less precise results. This property was proven for 17 fewer programs, when using the \textit{insens taint} configuration instead of the \textit{insens} configuration. In fact these results helped us find a bug in our implementation. This bug is now fixed and after the fix the \texttt{no-overflow} property is proven for these 17 programs with the \textit{insens taint} configuration. In conclusion however, we cannot say that the taint analysis provides an improvement for proving the \texttt{no-overflow} property.\\
+      Similarly, the \textit{insens taint} configuration is exactly as precise as the \texttt{insens} configuration for the \texttt{no-data-race} property. A timeout is the reason, why the \textit{sens} configuration proved the property for one fewer program than both of the other configurations. Considering this, we come to the conclusion, that for this property all three configurations are equally precise.\\
       \\
-      <TODO: TIMINGS!!!>\\
-      \begin{tabular}{l|l||r|r|r|r}
-        \textit{property} & \textit{config.} & \textit{avg. cputime} & \textit{avg. cputime} & \textit{\# Timeouts} & \textit{\# Errors} \\
-        & & \textit{all tasks (s)} & \textit{no errors (s)} & & \\
-        \hline
-        \texttt{unreach-call} & \textit{sens} & 191 & 30.8 & 1712 & 1934 \\
-        & \textit{insens} & 188 & 28.1 & 1563 & 1799 \\
-        & \textit{insens taint} & 188 & 31.2 & 1658 & 1908 \\
-        \hline
-        \texttt{no-overflow} & \textit{sens} & 7.51 & 0.722 & 51 & 130 \\
-        & \textit{insens} & 5.25 & 0.627 & 42 & 43 \\
-        & \textit{insens taint} & 5.37 & 0.694 & 44 & 45\\
-        \hline
-        \texttt{no-data-race} & \textit{sens} & 1.51 & 0.510 & 1 & 1\\
-        & \textit{insens} & 0.517 & 0.517 & 0 & 0 \\
-        & \textit{insens taint} & 0.525 & 0.525 & 0 & 0 \\
-        \hline
-      \end{tabular}
+      % TODO TIMING
+      The table in \autoref{fig:timingSVbenchTable} gives information related to the computation times of this benchmark. We first investigate the average computation time of only the tasks, where none of the runs with different configurations terminated with an error. Errors that occurred are mainly timeouts or stack overflow exceptions. A timeout was set to interrupt a task after fifteen minutes of non-termination. We can see, that the differences in the average computation time of tasks without errors are very small. In the case of the \texttt{unreach-call} property, the \textit{insens taint} configuration actually performed worse than the \textit{sens} configuration on average, but not by much. This is the property, where the taint analysis provided the most improvement as we found in the previous paragraph.\\
+      The most interesting property in this comparison is probably \textit{no-overflow}. Here, both the \textit{insens} and the \textit{insens taint} configuration have a significantly lower average computation time than the \textit{sens} property, when taking all tasks into account. The reason for this is, that the number of errors for each of these two configurations is less than a third when compared to the \textit{sens} configuration. From that we deduce, that performing the \texttt{base} analysis context insensitively leads to fewer errors and produces results more quickly compared to performing it context sensitively. As we found in the previous paragraph, not a lot of precision is lost with the \textit{insens} configuration compared to the \textit{sens} configuration. However, the taint analysis did not provide much improvement for this property.\\
+      A similar observation can be made from the timing results of the \texttt{no-data-race} condition. For this property the observation is far less expressive, as only one timeout occurred for the \textit{sens} configuration, compared to no error for the other configurations.
+    
+      \begin{figure}
+        \begin{tabular}{l|l||r|r||r|r}
+          \textit{property} & \textit{config.} & \textit{avg. cputime} & \textit{avg. cputime} & \textit{\# Timeouts} & \textit{\# Errors} \\
+          & & \textit{all tasks (s)} & \textit{no errors (s)} & & \\
+          \hline
+          \texttt{unreach-call} & \textit{sens} & 191 & 30.8 & 1712 & 1934 \\
+          & \textit{insens} & 188 & 28.1 & 1563 & 1799 \\
+          & \textit{insens taint} & 188 & 31.2 & 1658 & 1908 \\
+          \hline
+          \texttt{no-overflow} & \textit{sens} & 7.51 & 0.722 & 51 & 130 \\
+          & \textit{insens} & 5.25 & 0.627 & 42 & 43 \\
+          & \textit{insens taint} & 5.37 & 0.694 & 44 & 45\\
+          \hline
+          \texttt{no-data-race} & \textit{sens} & 1.51 & 0.510 & 1 & 1\\
+          & \textit{insens} & 0.517 & 0.517 & 0 & 0 \\
+          & \textit{insens taint} & 0.525 & 0.525 & 0 & 0 \\
+          \hline
+        \end{tabular}
+        \caption{Table showing timing results of the SV-Benchmarks. The collumn \textit{avg. cputime all tasks} contains the average time of all tasks for a property, while \textit{avg. cputime no errors} contains the average time of only the tasks, where no of the three configuration terminated with an error.}
+        \label{fig:timingSVbenchTable}
+      \end{figure}
 
     \subsection{GNU Coreutils}\label{sec:benchCoreutils}
       We also benchmark the improved \texttt{base} analysis with another approach. For this we use modified versions of C programs from the GNU Core Utilities "coreutils" \parencite{gnuCoreutils}. These programs implement "the basic file, shell and text manipulation utilities of the GNU operating system. These are the core utilities which are expected to exist on every operating system."\parencite{gnuCoreutils}\\
@@ -129,7 +134,7 @@
       For this reason we generate assertions with a configuration that performs the \texttt{base} analysis context sensitively. In order to do this we followed an approach similar to Julian Erhard, where he generated asserts for theses programs context insensitively. A detailed description of his approach can be found in \parencite{svBenchCoreutils}.\\
       We compare the same configurations we compared in \autoref{sec:benchSVbench}.\\
       
-      \begin{table}
+      \begin{figure}
         \centering
         \begin{tabular}{l|l||r|r||r|r|r}
           \textit{program} & \textit{config.} & \textit{\# asserts} & \textit{\# total} & \textit{\% loss by} & \textit{\% recovered} & \textit{\% recovered}\\
@@ -169,10 +174,10 @@
           \hline
         \end{tabular}
         \caption{Table showing the results of the coreutils with generated assertions}
-        \label{tbl:resultCoreutils}
-      \end{table}
+        \label{fig:resultCoreutils}
+      \end{figure}
 
-      The results of the benchmark runs on the coreutil programs can be seen in \autoref{tbl:resultCoreutils}. We omit the results for two further programs \texttt{cp\_comb.c} and \texttt{mv\_comb.c} because for these the analyzer proved some assertions to evaluate to "false" with the \textit{insens} and \textit{insens taint}. This hints at bugs in the analyzer which are unrelated to our changes.\\
+      The results of the benchmark runs on the coreutil programs can be seen in the table in \autoref{fig:resultCoreutils}. We omit the results for two further programs \texttt{cp\_comb.c} and \texttt{mv\_comb.c} because for these the analyzer proved some assertions to evaluate to "false" with the \textit{insens} and \textit{insens taint}. This hints at bugs in the analyzer which are unrelated to our changes.\\
       The numbers of total assertions differs between the \textit{sens} and both \textit{insens (taint)} configurations for some programs. The reason for this is, that an assertion in a function can be checked multiple times, once for each context the function is evaluated with. Therefore, we compare percentages for this benchmark.\\
       We make the following observations: The percentage of the precision loss that is recovered reaches over 16\% for one program while it stays below 2\% for all other programs. For three of the eight programs shown, no improvement was achieved at all. From this we conclude that it depends a lot on the program which analyzed, how much the taint analysis can improve the precision loss.\\
       We also note that the "\textit{\% recovered of total}" is rather low. That is the percentage of assertions, which were found with the \textit{insens taint} but not the \textit{insens} configuration, never surpasses 0.5\%. Therefore, we conclude that the effect of our changes on the overall precision of the analyzer is very limited.      
