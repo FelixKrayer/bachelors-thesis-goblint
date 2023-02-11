@@ -9,14 +9,21 @@
   TODO: Future work
 
 \begin{itemize}
-  \item \textbf{Summary:}
-  \item Source of Precison loss identified
-  \item Two ideas for reducing the precision loss for two types of analyses
-  \item implemented in \gob\ and tested to prove viability
-  \item benchmarked to check if a noticeable improvement is achieved
+%  \item \textbf{Summary:}
+%  \item Source of Precison loss identified
+%  \item Two ideas for reducing the precision loss for two types of analyses
+%  \item implemented in \gob\ and tested to prove viability
+%  \item benchmarked to check if a noticeable improvement is achieved
   \item \textbf{Conclusions:}
-  \item => result: little improvement, but not time costly???
-  \item -> future: more extensive benchmark for thread Create
-  \item -> future: Not that great???
+  \item -> in general insens not that costly (precision) but also not that much faster.
+  \item -> however insens produces less errors (Timeout/Stack overflow)
+  \item -> taint in general not that much benefit, but it has its uses (but not much faster compared to sens)
+  \item recursive is problematic with sens (error often), insens finds unknown much faster.
+  \item \textbf{Future Work}
+  \item general approach (identify partial information of a state that has not been changed by call and keep that from the caller state instead of overwriting it with less precis callee info)
+  \item more extensive benchmark for thread Create
+  \item inspect types of programs (e.g. recursive)
+  \item can be combined with any of related work approaches without any issues
+  \item autotuner somehow???
 \end{itemize}
 

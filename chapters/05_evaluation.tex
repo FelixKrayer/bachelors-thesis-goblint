@@ -26,9 +26,9 @@
       For each of these properties, we perform three benchmark runs with different configurations on each program for which it is specified that the property holds.
       The three configurations we use for the benchmark runs are:
       \begin{itemize}
-        \item \textit{sens}: The \texttt{base} analysis is performed context sensitively.
-        \item \textit{insens}: The \texttt{base} analysis is performed context insensitively.
-        \item \textit{insens taint}: The \texttt{base} analysis is performed context insensitively with the improvements of the taint analysis.
+        \item \textit{sens}: The \texttt{base} analysis is performed context-sensitively.
+        \item \textit{insens}: The \texttt{base} analysis is performed context-insensitively.
+        \item \textit{insens taint}: The \texttt{base} analysis is performed context-insensitively with the improvements of the taint analysis.
       \end{itemize}
       During each benchmark run with a certain configuration we save different kinds of information to compare later. The most important of which are the computation time per program and the total number of programs, for which the property to prove was proven.\\
       We first investigate the precision. For this we compare the number of programs for which the property was proven per configuration and property: The raw numbers can be found in \autoref{fig:resultSVbenchTable}, while the graph in \autoref{fig:resultSVbench} shows a visualization of the results.\\
@@ -93,7 +93,7 @@
         \label{fig:resultSVbenchTable}
       \end{figure}
 
-      As we can see in \autoref{fig:resultSVbench}, there is in fact not a big difference between the three configurations for each property. Our interpretation of this result is, that the choice between our three configurations only has a small effect on the precision of \gob when analyzing real world programs. In other words this means, that not a lot of precision is lost by performing the \texttt{base} analysis context insensitively. The taint analysis can only recover lost precision, so little over all precision loss means, that the taint analysis can only provide little over all improvement.\\
+      As we can see in \autoref{fig:resultSVbench}, there is in fact not a big difference between the three configurations for each property. Our interpretation of this result is, that the choice between our three configurations only has a small effect on the precision of \gob when analyzing real world programs. In other words this means, that not a lot of precision is lost by performing the \texttt{base} analysis context-insensitively. The taint analysis can only recover lost precision, so little over all precision loss means, that the taint analysis can only provide little over all improvement.\\
       \\
       We now take a closer look at \autoref{fig:resultSVbenchTable}. We first investigate the results for the \texttt{unreach-call} property: We see, that with the \textit{insens} configuration, the analyzer was able to proof the property 31 times fewer than with the \textit{sens} configuration. However, it proved the property 20 times more often with the \textit{insens taint} configuration compared to the \textit{insens} configuration. This leads us to the conclusion, that for this property the taint analysis helped to recover about 65\% of the precision lost.\\
       As for the results of the \texttt{no-overflow} property, it seems like the usage of the taint analysis leads to less precise results. This property was proven for 17 fewer programs, when using the \textit{insens taint} configuration instead of the \textit{insens} configuration. In fact these results helped us find a bug in our implementation. This bug is now fixed and after the fix the \texttt{no-overflow} property is proven for these 17 programs with the \textit{insens taint} configuration. In conclusion however, we cannot say that the taint analysis provides an improvement for proving the \texttt{no-overflow} property.\\
@@ -101,7 +101,7 @@
       \\
       % TODO TIMING
       The table in \autoref{fig:timingSVbenchTable} gives information related to the computation times of this benchmark. We first investigate the average computation time of only the tasks, where none of the runs with different configurations terminated with an error. Errors that occurred are mainly timeouts or stack overflow exceptions. A timeout was set to interrupt a task after fifteen minutes of non-termination. We can see, that the differences in the average computation time of tasks without errors are very small. In the case of the \texttt{unreach-call} property, the \textit{insens taint} configuration actually performed worse than the \textit{sens} configuration on average, but not by much. This is the property, where the taint analysis provided the most improvement as we found in the previous paragraph.\\
-      The most interesting property in this comparison is probably \textit{no-overflow}. Here, both the \textit{insens} and the \textit{insens taint} configuration have a significantly lower average computation time than the \textit{sens} property, when taking all tasks into account. The reason for this is, that the number of errors for each of these two configurations is less than a third when compared to the \textit{sens} configuration. From that we deduce, that performing the \texttt{base} analysis context insensitively leads to fewer errors and produces results more quickly compared to performing it context sensitively. As we found in the previous paragraph, not a lot of precision is lost with the \textit{insens} configuration compared to the \textit{sens} configuration. However, the taint analysis did not provide much improvement for this property.\\
+      The most interesting property in this comparison is probably \textit{no-overflow}. Here, both the \textit{insens} and the \textit{insens taint} configuration have a significantly lower average computation time than the \textit{sens} property, when taking all tasks into account. The reason for this is, that the number of errors for each of these two configurations is less than a third when compared to the \textit{sens} configuration. From that we deduce, that performing the \texttt{base} analysis context-insensitively leads to fewer errors and produces results more quickly compared to performing it context-sensitively. As we found in the previous paragraph, not a lot of precision is lost with the \textit{insens} configuration compared to the \textit{sens} configuration. However, the taint analysis did not provide much improvement for this property.\\
       A similar observation can be made from the timing results of the \texttt{no-data-race} condition. For this property the observation is far less expressive, as only one timeout occurred for the \textit{sens} configuration, compared to no error for the other configurations.
     
       \begin{figure}
@@ -122,7 +122,7 @@
           & \textit{insens taint} & 0.525 & 0.525 & 0 & 0 \\
           \hline
         \end{tabular}
-        \caption{Table showing timing results of the SV-Benchmarks. The collumn \textit{avg. cputime all tasks} contains the average time of all tasks for a property, while \textit{avg. cputime no errors} contains the average time of only the tasks, where no of the three configuration terminated with an error.}
+        \caption{Table showing timing results of the SV-Benchmarks. The column \textit{avg. cputime all tasks} contains the average time of all tasks for a property, while \textit{avg. cputime no errors} contains the average time of only the tasks, where no of the three configuration terminated with an error.}
         \label{fig:timingSVbenchTable}
       \end{figure}
 
@@ -131,7 +131,7 @@
       Combined versions of the coreutil programs are found in a benchmark repository dedicated for benchmarking the \gob\ analyzer \parencite{goblintBench}. A "combined version" of a program is a code file, where all dependencies of included files of the program are merged into one single code file.\\
       For these combined programs we use a feature from the \gob\ analyzer itself to generate assertions at different points within the program. An assertion is an equality or inequality involving program variables, that holds for every concrete execution of the program. To generate these, the analyzer performs an analysis with a given configuration on a given program. \gob\ then uses the information it gains to place assertions which it knows are true in the program and produces an output file.\\
       We can then use the resulting file with generated assertions to compare other analysis runs with different configurations. The metric for these comparisons is the number of proven assertions. It is necessary that the configuration which is used to generate the assertions is at least as precise as the most precise configuration of the runs we want to compare. Only the can this benchmarking approach to produce meaningful results.\\
-      For this reason we generate assertions with a configuration that performs the \texttt{base} analysis context sensitively. In order to do this we followed an approach similar to Julian Erhard, where he generated asserts for theses programs context insensitively. A detailed description of his approach can be found in \parencite{svBenchCoreutils}.\\
+      For this reason we generate assertions with a configuration that performs the \texttt{base} analysis context-sensitively. In order to do this we followed an approach similar to Julian Erhard, where he generated asserts for theses programs context-insensitively. A detailed description of his approach can be found in \parencite{svBenchCoreutils}.\\
       We compare the same configurations we compared in \autoref{sec:benchSVbench}.\\
       
       \begin{figure}
@@ -185,8 +185,8 @@
   \section{Benchmarking the improved \texttt{threadId} analysis}
     We only performed a partial benchmark for our improvement of the \texttt{threadId} analysis using the thread-create analysis. For this we again used the GNU coreutil programs, which we described in \autoref{sec:benchCoreutils}. This time however, instead of comparing the number of correctly proven assertions, we compare the number of race conditions, the \gob\ analyzer finds in each program with each configuration. We compared these configurations:
     \begin{itemize}
-      \item \textit{sens}: The \texttt{threadId} analysis is performed context sensitively.
-      \item \textit{part-sens}: The \texttt{threadId} analysis is performed partially context sensitively, i.e., only sensitive with respect to the thread ID but not with respect to the set of encountered create edges. Concretely, the option \texttt{ana.thread.context.createEdges} we added is disabled in this configuration.
+      \item \textit{sens}: The \texttt{threadId} analysis is performed context-sensitively.
+      \item \textit{part-sens}: The \texttt{threadId} analysis is performed partially context-sensitively, i.e., only sensitive with respect to the thread ID but not with respect to the set of encountered create edges. Concretely, the option \texttt{ana.thread.context.createEdges} we added is disabled in this configuration.
       \item \textit{part-sens taint}: Same configuration like \textit{part-sens} but with the improvements of the thread-create analysis enabled.
     \end{itemize}
     The results of this benchmark are as follows: For each of the coreutil programs, the analyzer finds between 5 and 8 race conditions. However, there is no difference between the three configurations. This means that for each program, the number of race conditions found is the same irregardless of the configuration chosen. This means that with this benchmarking setup we do not record any precision loss that results from partial context-sensitivity. Since no precision is lost, we cannot see, if the thread-create analysis provides an improvement.
