@@ -75,7 +75,7 @@
     The $\textsf{enter}^{\#}_\textsf{v}$ function first takes the part of the mapping from the caller that contains information about global variables. To the resulting state it adds the local variables used in the procedure. These map to $N$ because they randomly initialized in our toy language.\\
     For $\textsf{combine}^{\#}_\textsf{v}$ the local part of the caller is kept, but it is updated with the global part of the callee return state. This is done, because the latter contains the updated information about global variables after the procedure call.\\
 
-  \section{Context sensitivity}
+  \section{Context-sensitivity}
     In the previous chapter we approached the analysis of procedures by analyzing them only once with an abstract start state describing all possible concrete states the procedure could start with. We call this behavior "context-insensitive" as the procedure is analyzed without differentiating between different states with which it is called.\\
     This is not very precise as we will exemplify by applying the values-of-variables analysis to the program in \autoref{fig:example_ctx_sens}. We ignore the marked lines of the program for now.\\
     The procedure \texttt{incr()} is called twice: Once with $a = 1$ in \autoref{code:incr1} and once with $a = -3$ in \autoref{code:incr2}. This leads to two constraints for node $[s_{incr}]$: 
