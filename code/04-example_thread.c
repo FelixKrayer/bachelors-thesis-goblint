@@ -3,11 +3,11 @@ int a;
 void *tproc() {
   a = 2; |\label{code:assign2}|
 }
-int procedure() {
+void procedure() {
   //... (no thread creation)
 }
 
-int main() {
+void main() {
   procedure(); |\label{code:proc1}|
   
   a = 1; |\label{code:assign1}|

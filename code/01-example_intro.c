@@ -1,12 +1,13 @@
-void function() {
+int glob;
+
+void foo() {
   //...
 }
 
-int glob;
 void main() {
   glob = 1;
-  function();|\label{code:call1}|
+  foo();|\label{code:call1}|
 
   glob = 2;
-  function();|\label{code:call2}|
+  foo();|\label{code:call2}|
 }
