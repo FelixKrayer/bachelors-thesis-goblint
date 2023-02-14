@@ -25,7 +25,7 @@
       \draw[->] (1) -- node[midway, xshift=-31pt, yshift=25pt, pos=1] {\textsf{false}(x == 0)} (3);
     \end{tikzpicture}
   \end{subfigure}
-  \caption{Example program (left) and corresponding CFG (right).}
+  \caption[Example program and corresponding CFG to illustrate CFGs.]{Example program (left) and corresponding CFG (right) to illustrate Control Flow Graphs}
   \label{fig:example_cfg}
 \end{figure}
   
@@ -115,7 +115,7 @@
           \draw[->] (0) -- node[midway, xshift=28pt, yshift=11pt, pos=1] {a = a + 1;} (1);
         \end{tikzpicture}
       \end{subfigure}
-      \caption{Example program (left) and corresponding CFGs for \texttt{main} (middle) and \texttt{incr} (right). The asserts in \autoref{code:assert_a} and \autoref{code:assert_c} are proven with a context-sensitive values-of-variables analysis. However, a context-insensitive values-of-variables analysis fails to prove both.}
+      \caption[Example program and corresponding CFGs for \texttt{main} and \texttt{incr} to illustrate the source of precision loss.]{Example program (left) and corresponding CFGs for \texttt{main} (middle) and \texttt{incr} (right). The asserts in \autoref{code:assert_a} and \autoref{code:assert_c} are proven with a context-sensitive values-of-variables analysis. However, a context-insensitive values-of-variables analysis fails to prove both.}
       \label{fig:example_ctx_sens}
     \end{figure}
 
