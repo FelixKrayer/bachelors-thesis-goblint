@@ -15,22 +15,3 @@
   We would like to perform further benchmarks on the thread ID and thread create analysis. A run of the SV-Benchmarks' tasks with the \texttt{no-data-race} property is a suitable next step.\\
   Furthermore, we want to inspect the benchmark results for the \texttt{base} analysis more closely. We hope to find some sort of characterization of programs, where the taint analysis provided an improvement.\\
   Lastly, we note that similar approaches to the ones we proposed in the taint and thread create analysis can be applied to other kinds of analyses. In general, if it can be identified that some part of a state was not altered during a procedure call, that part can be kept from the caller state and does not have to be overwritten by potentially less precise information from the callee state. We would like to experiment with applying this principle to other analyses in future work.\\
-
-%\begin{itemize}
-%  \item \textbf{Summary:}
-%  \item Source of Precision loss identified
-%  \item Two ideas for reducing the precision loss for two types of analyses
-%  \item implemented in \gob\ and tested to prove viability
-%  \item benchmarked to check if a noticeable improvement is achieved
-%  \item \textbf{Conclusions:}
-%  \item -> in general insens not that costly (precision) but also not that much faster.
-%  \item -> however insens produces fewer errors (Timeout/Stack overflow)
-%  \item -> taint in general not that much benefit, but it has its uses (but not much faster compared to sens)
-%  \item recursive is problematic with sens (error often), insens finds unknown much faster.
-%  \item \textbf{Future Work}
-%  \item general approach (identify partial information of a state that has not been changed by call and keep that from the caller state instead of overwriting it with less precis callee info)
-%  \item more extensive benchmark for thread Create
-%  \item inspect types of programs (e.g. recursive)
-%  \item can be combined with any of related work approaches without any issues
-%  \item autotuner somehow???
-%\end{itemize}
