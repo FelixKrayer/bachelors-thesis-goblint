@@ -1,22 +1,22 @@
+% !BIB TS-program = biber
+
 \RequirePackage[l2tabu,orthodox]{nag}
 
-% TODO: decide if one-sided/two-sided
 %\documentclass[headsepline,footsepline,footinclude=false,fontsize=11pt,paper=a4,listof=totoc,bibliography=totoc,BCOR=12mm,DIV=12]{scrbook} % two-sided
 \documentclass[headsepline,footsepline,footinclude=false,oneside,fontsize=11pt,paper=a4,listof=totoc,bibliography=totoc]{scrbook} % one-sided
 
-% TODO: change citation style in settings
+% change citation style in settings
 \input{settings}
 
-% TODO: change thesis information
 \newcommand*{\getUniversity}{Technische Universität München}
-\newcommand*{\getFaculty}{Department of Informatics}
+\newcommand*{\getFaculty}{Informatics}
+\newcommand*{\getSchool}{Computation, Information and Technology}
 \newcommand*{\getTitle}{Combatting the Precision Loss of Partial Contexts in Abstract Interpretation}
-% TODO: PräzisionsverlustES? Präzisionsverlust laut Anmeldeformluar
-\newcommand*{\getTitleGer}{Bekämpfung des Präzisionsverlust durch partielle Kontexte in Abstrakter Interpretation}
+\newcommand*{\getTitleGer}{Bekämpfung des Präzisionsverlustes durch partielle Kontexte in Abstrakter Interpretation}
 \newcommand*{\getAuthor}{Felix Sebastian Krayer}
-\newcommand*{\getDoctype}{Bachelor's Thesis in Informatics}
-\newcommand*{\getSupervisor}{Supervisor} % TODO: Supervisor
-\newcommand*{\getAdvisor}{Advisor} % TODO: Advisor
+\newcommand*{\getDoctype}{Bachelor's Thesis}
+\newcommand*{\getSupervisor}{Prof. Dr. Helmut Seidl}
+\newcommand*{\getAdvisor}{Michael Schwarz}
 \newcommand*{\getSubmissionDate}{15th of February 2023}
 \newcommand*{\getSubmissionLocation}{Munich}
 
@@ -31,29 +31,36 @@
 
 \input{pages/title}
 \input{pages/disclaimer}
-\input{pages/acknowledgments}
+%\input{pages/acknowledgments}
 \input{pages/abstract}
 \microtypesetup{protrusion=false}
-\tableofcontents{}
+\begin{spacing}{0.96}
+\tableofcontents
+\end{spacing}
 \microtypesetup{protrusion=true}
 
 \mainmatter{}
 
 \input{chapters/01_introduction}
 \input{chapters/02_background}
-\input{chapters/03_mainContributions}
-\input{chapters/04_evaluation}
-\input{chapters/05_conclusion}
+\input{chapters/03_precisionLossVariableAnalyses}
+\input{chapters/04_precisionLossThreadAnalyses}
+\input{chapters/05_evaluation}
+\input{chapters/06_conclusions}
 
-\appendix{}
-Abbreviations % TODO: Abbreviations
-\begin{itemize}
-  \item CFG
-\end{itemize}
+%\appendix{}
 
 \microtypesetup{protrusion=false}
+
+%\addchap{Abbreviations}
+%\begin{acronym}
+%	\itemsep-.25\baselineskip
+%	\acro{CFG}[CFG]{Control Flow Graph}
+%	\acro{lval}[$\textsf{lval}$]{Left Value (of an assignment)}
+%\end{acronym}
+
 \listoffigures{}
-\listoftables{}
+%\listoftables{}
 \microtypesetup{protrusion=true}
 \printbibliography{}
 

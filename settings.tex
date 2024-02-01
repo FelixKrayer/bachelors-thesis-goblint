@@ -13,7 +13,7 @@
   minnames=3,
   maxbibnames=99,
   giveninits,
-  uniquename=init]{biblatex} % TODO: adapt citation style
+  uniquename=init]{biblatex} % adapt citation style
 \usepackage{graphicx}
 \usepackage{scrhack} % necessary for listings package
 \usepackage{listings}
@@ -24,9 +24,46 @@
 \usepackage{booktabs}
 \usepackage[final]{microtype}
 \usepackage{caption}
+\usepackage[printonlyused]{acronym}
 \usepackage[hidelinks]{hyperref} % hidelinks removes colored boxes around references and links
 \usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{setspace}
 \usepackage{subcaption}
+\AtBeginDocument{%
+	\hypersetup{
+		pdftitle=\getTitle,
+		pdfauthor=\getAuthor,
+	}
+}
+\usepackage{ifthen}
+
+\usetikzlibrary{positioning}
+
+\addto\extrasamerican{
+	\def\lstnumberautorefname{Line}
+	\def\chapterautorefname{Chapter}
+	\def\sectionautorefname{Section}
+	\def\subsectionautorefname{Section}
+	\def\subsubsectionautorefname{Section}
+}
+
+\addto\extrasngerman{
+	\def\lstnumberautorefname{Zeile}
+}
+
+% Themes
+\ifthenelse{\equal{\detokenize{dark}}{\jobname}}{%
+  % Dark theme
+  \newcommand{\bg}{black} % background
+  \newcommand{\fg}{white} % foreground
+  \usepackage[pagecolor=\bg]{pagecolor}
+  \color{\fg}
+}{%
+  % Light theme
+  \newcommand{\bg}{white} % background
+  \newcommand{\fg}{black} % foreground
+}
 
 \bibliography{bibliography}
 
@@ -52,7 +89,7 @@
 \definecolor{TUMAccentLightBlue}{HTML}{98C6EA}
 \definecolor{TUMAccentBlue}{HTML}{64A0C8}
 
-\newcommand{\Gob} {\textsc{Goblint} }
+\newcommand{\gob} {\textsc{Goblint}}
 
 % Settings for pgfplots
 \pgfplotsset{compat=newest}
@@ -70,5 +107,6 @@
   autogobble,
   keywordstyle=\bfseries\color{TUMBlue},
   stringstyle=\color{TUMAccentGreen},
-  commentstyle=\color{TUMAccentGreen}
+  commentstyle=\color{TUMAccentGreen},
+  captionpos=b,
 }
