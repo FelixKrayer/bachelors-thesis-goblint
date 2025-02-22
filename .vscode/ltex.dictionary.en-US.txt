@@ -1,6 +1,0 @@
-interprocedural
-Goblint
-callee
-overapproximation
-Interprocedural
-powerset

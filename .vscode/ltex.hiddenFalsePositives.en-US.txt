@@ -1,1 +1,0 @@
-{"rule":"POSSESSIVE_APOSTROPHE","sentence":"^\\QHere we define the functions context, enter and combine.\\E$"}
